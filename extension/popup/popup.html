@@ -278,6 +278,36 @@
     </div>
   </div>
 
+  <!-- Modal Selección Crear Modo -->
+  <div id="modal-create-choice" class="modal hidden">
+    <div class="modal-backdrop"></div>
+    <div class="modal-content modal-choice">
+      <div class="modal-header">
+        <h3>Crear Modo</h3>
+        <button class="btn-close" id="btn-close-choice">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p class="choice-description">¿Cómo quieres crear el modo?</p>
+        <div class="choice-buttons">
+          <button id="btn-capture-tabs" class="btn-choice">
+            <span class="btn-choice-icon">📸</span>
+            <span class="btn-choice-text">
+              <strong>Capturar pestañas</strong>
+              <small>Guardar las pestañas abiertas</small>
+            </span>
+          </button>
+          <button id="btn-manual-add" class="btn-choice">
+            <span class="btn-choice-icon">✏️</span>
+            <span class="btn-choice-text">
+              <strong>Agregar manualmente</strong>
+              <small>Añadir URLs una por una</small>
+            </span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Toast notifications -->
   <div id="toast" class="toast hidden"></div>
 

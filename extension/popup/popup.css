@@ -35,7 +35,7 @@ body {
   font-size: 14px;
   color: var(--text);
   background: linear-gradient(180deg, var(--bg) 0%, var(--bg-secondary) 100%);
-  width: 380px;
+  width: 400px;
   min-height: 420px;
   max-height: 600px;
   overflow-y: auto;
@@ -347,6 +347,33 @@ body {
   transform: translateY(-1px);
 }
 
+/* Modo activo - estilo verde brillante */
+.mode-item.mode-active {
+  border-color: var(--success);
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.08) 0%, rgba(34, 197, 94, 0.03) 100%);
+  box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.2), 0 4px 16px rgba(34, 197, 94, 0.15);
+  animation: activeGlow 2s ease-in-out infinite;
+}
+
+.mode-item.mode-active:hover {
+  border-color: var(--success);
+  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.3), 0 6px 20px rgba(34, 197, 94, 0.2);
+}
+
+.mode-item.mode-active .mode-urls-count {
+  color: var(--success);
+  font-weight: 500;
+}
+
+@keyframes activeGlow {
+  0%, 100% {
+    box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.2), 0 4px 16px rgba(34, 197, 94, 0.15);
+  }
+  50% {
+    box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.3), 0 4px 20px rgba(34, 197, 94, 0.25);
+  }
+}
+
 .mode-info {
   display: flex;
   align-items: center;
@@ -380,22 +407,82 @@ body {
   gap: 8px;
 }
 
+.btn-group {
+  display: flex;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(34, 197, 94, 0.3);
+}
+
 .btn-activate {
   background: linear-gradient(135deg, var(--success) 0%, var(--success-light) 100%);
   color: white;
   border: none;
   padding: 8px 14px;
-  border-radius: var(--radius-sm);
+  border-radius: 0;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
-  box-shadow: 0 2px 8px rgba(34, 197, 94, 0.3);
 }
 
 .btn-activate:hover {
-  transform: scale(1.05);
+  filter: brightness(1.1);
+}
+
+.btn-deactivate {
+  background: linear-gradient(135deg, var(--danger) 0%, #f87171 100%);
+  color: white;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 0;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-deactivate:hover {
+  filter: brightness(1.1);
+}
+
+.mode-active .btn-group {
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+}
+
+.mode-active .btn-group:hover {
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+}
+
+.mode-active .btn-new-window {
+  background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+  border-left: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.mode-active .btn-new-window:hover {
+  background: linear-gradient(135deg, #b91c1c 0%, #dc2626 100%);
+}
+
+.btn-new-window {
+  background: linear-gradient(135deg, #16a34a 0%, #22c55e 100%);
+  color: white;
+  border: none;
+  border-left: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 8px 10px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-new-window:hover {
+  filter: brightness(1.1);
+  background: linear-gradient(135deg, #15803d 0%, #16a34a 100%);
+}
+
+.btn-group:hover {
   box-shadow: 0 4px 12px rgba(34, 197, 94, 0.4);
+  transform: scale(1.02);
 }
 
 .btn-menu {
@@ -425,10 +512,11 @@ body {
   background: var(--bg);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  min-width: 140px;
+  box-shadow: var(--shadow-lg);
+  min-width: 180px;
   z-index: 100;
   overflow: hidden;
+  margin-top: 4px;
 }
 
 .dropdown-menu.hidden {
@@ -438,22 +526,82 @@ body {
 .dropdown-item {
   display: block;
   width: 100%;
-  padding: 10px 14px;
+  padding: 10px 12px;
   text-align: left;
   background: none;
   border: none;
   cursor: pointer;
   font-size: 13px;
   color: var(--text);
-  transition: all 0.2s;
+  transition: all 0.15s;
 }
 
 .dropdown-item:hover {
   background: var(--bg-secondary);
+  padding-left: 16px;
 }
 
 .dropdown-item.danger {
   color: var(--danger);
+}
+
+.dropdown-item.danger:hover {
+  background: rgba(239, 68, 68, 0.08);
+}
+
+/* Dropdown Toggle - Compacto */
+.dropdown-toggle {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--text-secondary);
+  transition: all 0.2s;
+  gap: 12px;
+}
+
+.dropdown-toggle:hover {
+  background: var(--bg-secondary);
+  color: var(--text);
+}
+
+.toggle-switch {
+  width: 28px;
+  height: 16px;
+  background: var(--border);
+  border-radius: 8px;
+  position: relative;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.toggle-switch::after {
+  content: '';
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background: white;
+  border-radius: 50%;
+  top: 2px;
+  left: 2px;
+  transition: all 0.2s;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.toggle-switch.active {
+  background: var(--success);
+}
+
+.toggle-switch.active::after {
+  left: 14px;
+}
+
+.dropdown-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 4px 0;
 }
 
 /* Footer */
@@ -837,4 +985,68 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--secondary);
+}
+
+/* Modal Choice - Selección crear modo */
+.modal-choice {
+  max-width: 320px;
+}
+
+.choice-description {
+  text-align: center;
+  color: var(--secondary);
+  margin-bottom: 16px;
+  font-size: 14px;
+}
+
+.choice-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.btn-choice {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px;
+  background: var(--surface);
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+}
+
+.btn-choice:hover {
+  border-color: var(--primary);
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.08) 0%, rgba(139, 92, 246, 0.08) 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15);
+}
+
+.btn-choice:active {
+  transform: translateY(0);
+}
+
+.btn-choice-icon {
+  font-size: 28px;
+  flex-shrink: 0;
+}
+
+.btn-choice-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.btn-choice-text strong {
+  font-size: 14px;
+  color: var(--text);
+  font-weight: 600;
+}
+
+.btn-choice-text small {
+  font-size: 12px;
+  color: var(--secondary);
 }
