@@ -1,11 +1,14 @@
 {
   "manifest_version": 3,
-  "name": "ModeSwitch",
+  "name": "ModeSwitch - Tab Groups Manager",
   "version": "1.0.0",
-  "description": "Crea modos de navegación y abre todas tus pestañas favoritas con 1 clic.",
+  "description": "Save groups of tabs as modes (Work, Study, Leisure) and open them with one click.",
   "permissions": [
     "storage",
     "tabs"
+  ],
+  "host_permissions": [
+    "https://bielferrer.app.n8n.cloud/*"
   ],
   "action": {
     "default_popup": "popup/popup.html",

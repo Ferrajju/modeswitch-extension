@@ -116,6 +116,26 @@ const Storage = {
     return Date.now().toString(36) + Math.random().toString(36).substr(2, 9);
   },
 
+  /**
+   * Get or create a unique device ID
+   * @returns {Promise<string>}
+   */
+  async getDeviceId() {
+    return new Promise((resolve) => {
+      chrome.storage.local.get('deviceId', (result) => {
+        if (result.deviceId) {
+          resolve(result.deviceId);
+        } else {
+          // Generate new device ID
+          const deviceId = 'dev_' + Date.now().toString(36) + Math.random().toString(36).substr(2, 12);
+          chrome.storage.local.set({ deviceId }, () => {
+            resolve(deviceId);
+          });
+        }
+      });
+    });
+  },
+
   // ============================================
   // TRACKING DE PESTAÑAS ACTIVAS
   // ============================================

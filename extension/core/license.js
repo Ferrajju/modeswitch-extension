@@ -1,13 +1,19 @@
 /**
- * License module - Gestión del modo Pro
+ * License module - Pro mode management
  */
 
 const License = {
-  // Límite de modos en versión gratuita
+  // Free version mode limit
   FREE_MODE_LIMIT: 2,
 
+  // Developer master key (bypasses webhook)
+  MASTER_KEY: 'BielFerrer',
+
+  // Webhook URL for license validation
+  WEBHOOK_URL: 'https://bielferrer.app.n8n.cloud/webhook/91621004-7c67-44f7-b352-6087fec0c2d5',
+
   /**
-   * Verifica si el usuario es Pro
+   * Check if user is Pro
    * @returns {Promise<boolean>}
    */
   async isPro() {
@@ -16,7 +22,7 @@ const License = {
   },
 
   /**
-   * Obtiene el límite de modos según el tipo de licencia
+   * Get mode limit based on license type
    * @returns {Promise<number>}
    */
   async getModeLimit() {
@@ -25,7 +31,7 @@ const License = {
   },
 
   /**
-   * Verifica si se puede crear un nuevo modo
+   * Check if user can create a new mode
    * @returns {Promise<{canCreate: boolean, reason?: string}>}
    */
   async canCreateMode() {
@@ -38,61 +44,104 @@ const License = {
     if (currentCount >= this.FREE_MODE_LIMIT) {
       return {
         canCreate: false,
-        reason: `Has alcanzado el límite de ${this.FREE_MODE_LIMIT} modo(s) en la versión gratuita. Activa Pro para modos ilimitados.`
+        reason: `You've reached the limit of ${this.FREE_MODE_LIMIT} mode(s) in the free version. Upgrade to Pro for unlimited modes.`
       };
     }
 
     return { canCreate: true };
   },
 
-  // Clave maestra del desarrollador
-  MASTER_KEY: 'BielFerrer',
-
   /**
-   * Activa la licencia Pro
-   * @param {string} licenseKey
-   * @returns {Promise<{success: boolean, message: string}>}
+   * Verify license key via webhook with device binding
+   * @param {string} key - The license key to verify
+   * @returns {Promise<{ok: boolean, error?: string}>}
    */
-  async activatePro(licenseKey) {
-    // Validación básica de la clave
-    if (!licenseKey || licenseKey.trim().length < 8) {
-      return {
-        success: false,
-        message: 'La clave de licencia no es válida'
-      };
+  async verifyLicenseKey(key) {
+    if (!key) {
+      return { ok: false, error: 'invalid_key' };
     }
 
-    const cleanKey = licenseKey.trim();
-    
-    // Clave maestra del desarrollador - Pro permanente
-    const isMasterKey = cleanKey === this.MASTER_KEY;
+    const cleanKey = key.trim().toUpperCase();
 
-    await Storage.saveLicense({
-      isPro: true,
-      licenseKey: isMasterKey ? '🔑 MASTER KEY' : cleanKey.toUpperCase(),
-      isMaster: isMasterKey,
-      activatedAt: Date.now()
-    });
+    if (cleanKey.length < 8) {
+      return { ok: false, error: 'invalid_key' };
+    }
 
-    return {
-      success: true,
-      message: isMasterKey ? '👑 ¡Bienvenido, Biel! Pro activado para siempre.' : '¡Pro activado correctamente!'
-    };
+    // Master key bypasses webhook
+    if (cleanKey === this.MASTER_KEY.toUpperCase()) {
+      return { ok: true, isMaster: true };
+    }
+
+    // Get or create device ID
+    const deviceId = await Storage.getDeviceId();
+
+    // Call webhook to verify with device binding
+    try {
+      const response = await fetch(this.WEBHOOK_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ 
+          key: cleanKey,
+          deviceId: deviceId
+        })
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.ok === true) {
+        return { ok: true };
+      } else if (data.error === 'device_mismatch') {
+        return { ok: false, error: 'device_mismatch' };
+      } else {
+        return { ok: false, error: 'invalid_key' };
+      }
+    } catch (error) {
+      return { ok: false, error: 'network_error' };
+    }
   },
 
   /**
-   * Desactiva la licencia Pro
+   * Activate Pro license
+   * @param {string} key - The license key
+   * @returns {Promise<{ok: boolean, error?: string}>}
+   */
+  async activatePro(key) {
+    const cleanKey = key ? key.trim().toUpperCase() : '';
+    
+    // Verify the key
+    const result = await this.verifyLicenseKey(cleanKey);
+
+    if (result.ok) {
+      // Save license to storage
+      await Storage.saveLicense({
+        isPro: true,
+        key: result.isMaster ? '🔑 MASTER KEY' : cleanKey,
+        isMaster: result.isMaster || false,
+        activatedAt: Date.now()
+      });
+      return { ok: true };
+    }
+
+    return { ok: false, error: result.error };
+  },
+
+  /**
+   * Reset/deactivate Pro license (for testing)
    * @returns {Promise<void>}
    */
-  async deactivatePro() {
+  async resetPro() {
     await Storage.saveLicense({
       isPro: false,
-      licenseKey: null
+      key: null,
+      isMaster: false,
+      activatedAt: null
     });
   },
 
   /**
-   * Obtiene información de la licencia para mostrar
+   * Get license info for display
    * @returns {Promise<Object>}
    */
   async getLicenseInfo() {
@@ -104,7 +153,7 @@ const License = {
       isPro: license.isPro,
       modesCount,
       modesLimit: limit,
-      modesText: license.isPro ? 'Pro activo' : `${modesCount}/${limit} modos`
+      modesText: license.isPro ? 'Pro active' : `${modesCount}/${limit} modes`
     };
   }
 };

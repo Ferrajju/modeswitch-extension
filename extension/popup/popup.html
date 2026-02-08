@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,7 +11,7 @@
     <!-- Header -->
     <header class="header">
       <h1 class="logo">ModeSwitch</h1>
-      <button id="btn-settings" class="btn-icon" title="Ajustes">
+      <button id="btn-settings" class="btn-icon" title="Settings">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <circle cx="12" cy="12" r="3"></circle>
           <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
@@ -21,67 +21,66 @@
     
     <div class="header-divider"></div>
 
-    <!-- Botón principal destacado -->
+    <!-- Main action button -->
     <button id="btn-save-current" class="btn-hero">
       <span class="btn-hero-glow"></span>
       <span class="btn-hero-content">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
           <path d="M12 5v14M5 12h14"></path>
         </svg>
-        Crear nuevo modo
+        Create New Mode
       </span>
     </button>
 
-    <!-- Botón cerrar todo - estilo danger -->
-    <button id="btn-close-all" class="btn-danger-clear" title="Cerrar todas las pestañas">
+    <!-- Close all button -->
+    <button id="btn-close-all" class="btn-danger-clear" title="Close all tabs">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <polyline points="3 6 5 6 21 6"></polyline>
         <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
         <line x1="10" y1="11" x2="10" y2="17"></line>
         <line x1="14" y1="11" x2="14" y2="17"></line>
       </svg>
-      Cerrar todas las pestañas
+      Close All Tabs
     </button>
 
-    <!-- Lista de modos -->
+    <!-- Modes list -->
     <section class="modes-section">
-      <h2 class="section-title">Mis Modos</h2>
+      <h2 class="section-title">My Modes</h2>
       <div id="modes-list" class="modes-list">
-        <!-- Los modos se cargan dinámicamente -->
-        <p class="empty-state">No tienes modos guardados</p>
+        <p class="empty-state">No saved modes yet</p>
       </div>
     </section>
 
     <!-- Footer -->
     <footer class="footer" id="footer">
       <div id="footer-free" class="footer-content">
-        <span id="modes-count" class="modes-count">0/2 modos</span>
+        <span id="modes-count" class="modes-count">0/2 modes</span>
         <button id="btn-unlock-pro" class="btn-pro-compact">
           <span class="btn-pro-icon">⚡</span>
-          Pro
+          Upgrade to Pro
         </button>
       </div>
       <div id="footer-pro" class="footer-content footer-pro hidden">
-        <span class="pro-badge-compact">👑 Pro activo</span>
+        <span class="pro-badge-compact">👑 Pro active</span>
       </div>
     </footer>
   </div>
 
-  <!-- Modal Crear/Editar Modo -->
+  <!-- Modal Create/Edit Mode -->
   <div id="modal-mode" class="modal hidden">
     <div class="modal-backdrop"></div>
     <div class="modal-content">
       <div class="modal-header">
-        <h3 id="modal-title">Crear Modo</h3>
+        <h3 id="modal-title">Create Mode</h3>
         <button class="btn-close" id="btn-close-modal">&times;</button>
       </div>
       <div class="modal-body">
         <div class="form-group">
-          <label for="mode-name">Nombre del modo</label>
-          <input type="text" id="mode-name" placeholder="Ej: Trabajo, Estudio..." maxlength="30">
+          <label for="mode-name">Mode name</label>
+          <input type="text" id="mode-name" placeholder="e.g. Work, Study..." maxlength="30">
         </div>
         <div class="form-group">
-          <label>Icono del modo</label>
+          <label>Mode icon</label>
           <div id="icon-picker" class="icon-picker">
             <!-- Trabajo y Productividad -->
             <button type="button" class="icon-option selected" data-icon="💼">💼</button>
@@ -187,35 +186,34 @@
         <div class="form-group">
           <label class="checkbox-label">
             <input type="checkbox" id="save-current-tabs" checked>
-            Guardar pestañas actuales
+            Save current tabs
           </label>
         </div>
         <div class="form-group">
-          <label for="open-in">Abrir en</label>
+          <label for="open-in">Open in</label>
           <select id="open-in">
-            <option value="currentWindow">Misma ventana</option>
-            <option value="newWindow">Nueva ventana</option>
+            <option value="currentWindow">Current window</option>
+            <option value="newWindow">New window</option>
           </select>
         </div>
       </div>
       <div class="modal-footer">
-        <button id="btn-cancel-mode" class="btn-secondary">Cancelar</button>
-        <button id="btn-save-mode" class="btn-primary">Guardar</button>
+        <button id="btn-cancel-mode" class="btn-secondary">Cancel</button>
+        <button id="btn-save-mode" class="btn-primary">Save</button>
       </div>
     </div>
   </div>
 
-  <!-- Modal Editar URLs -->
+  <!-- Modal Edit URLs -->
   <div id="modal-urls" class="modal hidden">
     <div class="modal-backdrop"></div>
     <div class="modal-content modal-urls-content">
       <div class="modal-header">
-        <h3>Editar URLs</h3>
+        <h3>Edit URLs</h3>
         <button class="btn-close" id="btn-close-urls-modal">&times;</button>
       </div>
       <div class="modal-body modal-urls-body">
         <div id="urls-list" class="urls-list">
-          <!-- URLs se cargan dinámicamente -->
         </div>
       </div>
       <div class="modal-footer modal-urls-footer">
@@ -224,34 +222,39 @@
             <line x1="12" y1="5" x2="12" y2="19"></line>
             <line x1="5" y1="12" x2="19" y2="12"></line>
           </svg>
-          Añadir URL
+          Add URL
         </button>
         <div class="modal-footer-actions">
-          <button id="btn-cancel-urls" class="btn-secondary">Cancelar</button>
-          <button id="btn-save-urls" class="btn-primary">Guardar</button>
+          <button id="btn-cancel-urls" class="btn-secondary">Cancel</button>
+          <button id="btn-save-urls" class="btn-primary">Save</button>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Modal Ajustes -->
+  <!-- Modal Settings -->
   <div id="modal-settings" class="modal hidden">
     <div class="modal-backdrop"></div>
     <div class="modal-content">
       <div class="modal-header">
-        <h3>Ajustes</h3>
+        <h3>Settings</h3>
         <button class="btn-close" id="btn-close-settings">&times;</button>
       </div>
       <div class="modal-body">
         <div class="form-group">
           <label class="checkbox-label">
             <input type="checkbox" id="close-other-tabs">
-            Cerrar otras pestañas al activar un modo
+            Close other tabs when activating a mode
           </label>
+        </div>
+        <div class="form-group" id="reset-pro-group" style="display: none;">
+          <div class="settings-divider"></div>
+          <button id="btn-reset-pro" class="btn-danger-small">Reset Pro License</button>
+          <small class="settings-hint">For testing only. Deactivates Pro.</small>
         </div>
       </div>
       <div class="modal-footer">
-        <button id="btn-save-settings" class="btn-primary">Guardar</button>
+        <button id="btn-save-settings" class="btn-primary">Save</button>
       </div>
     </div>
   </div>
@@ -261,46 +264,58 @@
     <div class="modal-backdrop"></div>
     <div class="modal-content">
       <div class="modal-header">
-        <h3>Activar Pro</h3>
+        <h3>Upgrade to Pro</h3>
         <button class="btn-close" id="btn-close-pro">&times;</button>
       </div>
       <div class="modal-body">
-        <p class="pro-description">Desbloquea modos ilimitados con tu clave de licencia.</p>
+        <div class="pro-benefits">
+          <p class="pro-benefit">✓ Unlimited modes</p>
+          <p class="pro-benefit">✓ One-time payment</p>
+          <p class="pro-benefit">✓ Lifetime access</p>
+        </div>
+        <button id="btn-buy-pro" class="btn-buy-pro">
+          <span class="btn-buy-text">
+            <strong>Upgrade to Pro - $6.99</strong>
+            <small>One-time payment</small>
+          </span>
+        </button>
+        <div class="pro-divider">
+          <span>Already have a license?</span>
+        </div>
         <div class="form-group">
-          <label for="license-key">Clave de licencia</label>
-          <input type="text" id="license-key" placeholder="XXXX-XXXX-XXXX-XXXX">
+          <input type="text" id="license-key" placeholder="Enter your license key">
         </div>
       </div>
       <div class="modal-footer">
-        <button id="btn-cancel-pro" class="btn-secondary">Cancelar</button>
-        <button id="btn-activate-pro" class="btn-primary">Activar</button>
+        <button id="btn-cancel-pro" class="btn-secondary">Cancel</button>
+        <button id="btn-activate-pro" class="btn-primary">Activate</button>
       </div>
     </div>
   </div>
 
-  <!-- Modal Selección Crear Modo -->
+  <!-- Modal Create Mode Choice -->
   <div id="modal-create-choice" class="modal hidden">
     <div class="modal-backdrop"></div>
     <div class="modal-content modal-choice">
       <div class="modal-header">
-        <h3>Crear Modo</h3>
+        <h3>Create Mode</h3>
         <button class="btn-close" id="btn-close-choice">&times;</button>
       </div>
       <div class="modal-body">
-        <p class="choice-description">¿Cómo quieres crear el modo?</p>
+        <p class="choice-description">How do you want to create the mode?</p>
         <div class="choice-buttons">
           <button id="btn-capture-tabs" class="btn-choice">
             <span class="btn-choice-icon">📸</span>
             <span class="btn-choice-text">
-              <strong>Capturar pestañas</strong>
-              <small>Guardar las pestañas abiertas</small>
+              <strong>Capture tabs</strong>
+              <small>Save your open tabs</small>
             </span>
           </button>
           <button id="btn-manual-add" class="btn-choice">
             <span class="btn-choice-icon">✏️</span>
             <span class="btn-choice-text">
-              <strong>Agregar manualmente</strong>
-              <small>Añadir URLs una por una</small>
+              <strong>Add manually</strong>
+              <small>Add URLs one by one</small>
             </span>
           </button>
         </div>

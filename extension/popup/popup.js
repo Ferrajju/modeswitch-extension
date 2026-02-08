@@ -52,6 +52,8 @@ const elements = {
   closeOtherTabs: document.getElementById('close-other-tabs'),
   btnCloseSettings: document.getElementById('btn-close-settings'),
   btnSaveSettings: document.getElementById('btn-save-settings'),
+  resetProGroup: document.getElementById('reset-pro-group'),
+  btnResetPro: document.getElementById('btn-reset-pro'),
   
   // Modal Pro
   modalPro: document.getElementById('modal-pro'),
@@ -59,6 +61,7 @@ const elements = {
   btnClosePro: document.getElementById('btn-close-pro'),
   btnCancelPro: document.getElementById('btn-cancel-pro'),
   btnActivatePro: document.getElementById('btn-activate-pro'),
+  btnBuyPro: document.getElementById('btn-buy-pro'),
   
   // Modal selección crear modo
   modalCreateChoice: document.getElementById('modal-create-choice'),
@@ -104,14 +107,18 @@ async function updateLicenseUI() {
   const info = await License.getLicenseInfo();
   
   if (info.isPro) {
-    // Mostrar footer Pro, ocultar footer gratis
+    // Show Pro footer, hide free footer
     elements.footerFree.classList.add('hidden');
     elements.footerPro.classList.remove('hidden');
+    // Show reset button in settings
+    elements.resetProGroup.style.display = 'block';
   } else {
-    // Mostrar footer gratis, ocultar footer Pro
+    // Show free footer, hide Pro footer
     elements.footerFree.classList.remove('hidden');
     elements.footerPro.classList.add('hidden');
-    elements.modesCount.textContent = `${info.modesCount}/${info.modesLimit} modos`;
+    elements.modesCount.textContent = `${info.modesCount}/${info.modesLimit} modes`;
+    // Hide reset button in settings
+    elements.resetProGroup.style.display = 'none';
   }
 }
 
@@ -144,7 +151,7 @@ function getTrulyActiveModes() {
 
 function renderModes() {
   if (currentModes.length === 0) {
-    elements.modesList.innerHTML = '<p class="empty-state">No tienes modos guardados</p>';
+    elements.modesList.innerHTML = '<p class="empty-state">No saved modes yet</p>';
     return;
   }
 
@@ -161,30 +168,30 @@ function renderModes() {
         <span class="mode-icon">${mode.icon || '💼'}</span>
         <div class="mode-details">
           <span class="mode-name">${escapeHtml(mode.name)}</span>
-          <span class="mode-urls-count">${mode.urls.length} pestaña${mode.urls.length !== 1 ? 's' : ''}${isActive ? ' • Activo' : ''}</span>
+          <span class="mode-urls-count">${mode.urls.length} tab${mode.urls.length !== 1 ? 's' : ''}${isActive ? ' • Active' : ''}</span>
         </div>
       </div>
       <div class="mode-actions">
         <div class="btn-group">
           ${isActive 
-            ? `<button class="btn-deactivate" data-action="deactivate" data-id="${mode.id}">Cerrar</button>`
-            : `<button class="btn-activate" data-action="activate" data-id="${mode.id}">Activar</button>
-               <button class="btn-new-window" data-action="activate-alternate" data-id="${mode.id}" title="Abrir de forma alternativa">+</button>`
+            ? `<button class="btn-deactivate" data-action="deactivate" data-id="${mode.id}">Close</button>`
+            : `<button class="btn-activate" data-action="activate" data-id="${mode.id}">Open</button>
+               <button class="btn-new-window" data-action="activate-alternate" data-id="${mode.id}" title="Open alternate way">+</button>`
           }
         </div>
         <div class="dropdown">
           <button class="btn-menu" data-action="menu" data-id="${mode.id}">⋮</button>
           <div class="dropdown-menu hidden" data-menu-id="${mode.id}">
             <div class="dropdown-toggle" data-action="toggle-new-window" data-id="${mode.id}">
-              <span>Nueva ventana</span>
+              <span>New window</span>
               <span class="toggle-switch ${mode.openIn === 'newWindow' ? 'active' : ''}" data-id="${mode.id}"></span>
             </div>
             <div class="dropdown-divider"></div>
-            ${isActive ? `<button class="dropdown-item danger" data-action="deactivate" data-id="${mode.id}">Cerrar pestañas</button>` : ''}
-            <button class="dropdown-item" data-action="recapture" data-id="${mode.id}">Recapturar</button>
-            <button class="dropdown-item" data-action="rename" data-id="${mode.id}">Renombrar</button>
-            <button class="dropdown-item" data-action="edit-urls" data-id="${mode.id}">Editar URLs</button>
-            <button class="dropdown-item danger" data-action="delete" data-id="${mode.id}">Borrar</button>
+            ${isActive ? `<button class="dropdown-item danger" data-action="deactivate" data-id="${mode.id}">Close tabs</button>` : ''}
+            <button class="dropdown-item" data-action="recapture" data-id="${mode.id}">Recapture</button>
+            <button class="dropdown-item" data-action="rename" data-id="${mode.id}">Rename</button>
+            <button class="dropdown-item" data-action="edit-urls" data-id="${mode.id}">Edit URLs</button>
+            <button class="dropdown-item danger" data-action="delete" data-id="${mode.id}">Delete</button>
           </div>
         </div>
       </div>
@@ -231,12 +238,14 @@ function setupEventListeners() {
   // Modal ajustes
   elements.btnCloseSettings.addEventListener('click', () => closeModal(elements.modalSettings));
   elements.btnSaveSettings.addEventListener('click', handleSaveSettings);
+  elements.btnResetPro.addEventListener('click', handleResetPro);
   elements.modalSettings.querySelector('.modal-backdrop').addEventListener('click', () => closeModal(elements.modalSettings));
   
   // Modal Pro
   elements.btnClosePro.addEventListener('click', () => closeModal(elements.modalPro));
   elements.btnCancelPro.addEventListener('click', () => closeModal(elements.modalPro));
   elements.btnActivatePro.addEventListener('click', handleActivatePro);
+  elements.btnBuyPro.addEventListener('click', handleBuyPro);
   elements.modalPro.querySelector('.modal-backdrop').addEventListener('click', () => closeModal(elements.modalPro));
   
   // Modal selección crear modo
@@ -274,7 +283,7 @@ async function handleCaptureTabs() {
   
   // Abrir modal para crear modo con captura de pestañas
   editingModeId = null;
-  elements.modalTitle.textContent = 'Crear Modo';
+  elements.modalTitle.textContent = 'Create Mode';
   elements.modeName.value = '';
   elements.saveCurrentTabs.checked = true;
   elements.saveCurrentTabs.parentElement.style.display = 'none'; // Ocultar checkbox, ya decidió capturar
@@ -289,7 +298,7 @@ async function handleManualAdd() {
   
   // Abrir modal para crear modo sin captura
   editingModeId = null;
-  elements.modalTitle.textContent = 'Crear Modo';
+  elements.modalTitle.textContent = 'Create Mode';
   elements.modeName.value = '';
   elements.saveCurrentTabs.checked = false;
   elements.saveCurrentTabs.parentElement.style.display = 'none'; // Ocultar checkbox, ya decidió manual
@@ -315,7 +324,7 @@ function selectIcon(icon) {
 }
 
 async function handleCloseAllTabs() {
-  if (!confirm('¿Cerrar todas las pestañas y dejar solo una en blanco?')) {
+  if (!confirm('Close all tabs and leave only one blank tab?')) {
     return;
   }
 
@@ -332,9 +341,9 @@ async function handleCloseAllTabs() {
       await chrome.tabs.remove(tabIdsToClose);
     }
     
-    showToast('Pestañas cerradas', 'success');
+    showToast('Tabs closed', 'success');
   } catch (error) {
-    showToast('Error al cerrar pestañas', 'error');
+    showToast('Error closing tabs', 'error');
   }
 }
 
@@ -365,7 +374,7 @@ async function handleSaveMode() {
   const name = elements.modeName.value.trim();
   
   if (!name) {
-    showToast('Introduce un nombre para el modo', 'error');
+    showToast('Enter a name for the mode', 'error');
     return;
   }
 
@@ -380,7 +389,7 @@ async function handleSaveMode() {
       icon: selectedIcon,
       openIn: elements.openIn.value
     });
-    showToast('Modo actualizado');
+    showToast('Mode updated');
   } else {
     // Creando nuevo modo
     if (elements.saveCurrentTabs.checked) {
@@ -388,7 +397,7 @@ async function handleSaveMode() {
       urls = await getUrlsExcludingActiveModes();
       
       if (urls.length === 0) {
-        showToast('No hay pestañas nuevas para capturar (todas pertenecen a modos activos)', 'error');
+        showToast('No new tabs to capture (all belong to active modes)', 'error');
         return;
       }
     }
@@ -399,7 +408,7 @@ async function handleSaveMode() {
       urls,
       openIn: elements.openIn.value
     });
-    showToast(`Modo guardado (${urls.length} pestañas)`);
+    showToast(`Mode saved (${urls.length} tabs)`);
   }
 
   closeModal(elements.modalMode);
@@ -477,18 +486,18 @@ async function handleRecaptureTabs(id) {
   const uniqueUrls = Modes.removeDuplicates(availableTabs.map(t => t.url));
   
   if (uniqueUrls.length === 0) {
-    showToast('No hay pestañas para capturar', 'error');
+    showToast('No tabs to capture', 'error');
     return;
   }
 
   const confirmed = confirm(
-    `¿Reemplazar las ${mode.urls.length} pestañas guardadas en "${mode.name}" por ${uniqueUrls.length} pestañas?`
+    `Replace the ${mode.urls.length} saved tabs in "${mode.name}" with ${uniqueUrls.length} tabs?`
   );
 
   if (confirmed) {
     await Modes.update(id, { urls: uniqueUrls });
     await loadModes();
-    showToast(`Pestañas recapturadas (${uniqueUrls.length})`, 'success');
+    showToast(`Tabs recaptured (${uniqueUrls.length})`, 'success');
   }
 }
 
@@ -498,12 +507,12 @@ async function activateMode(id, forceNewWindow = false) {
     const settings = await Storage.getSettings();
     
     if (!mode) {
-      showToast('Modo no encontrado', 'error');
+      showToast('Mode not found', 'error');
       return;
     }
 
     if (mode.urls.length === 0) {
-      showToast('Este modo no tiene URLs', 'error');
+      showToast('This mode has no URLs', 'error');
       return;
     }
 
@@ -517,7 +526,7 @@ async function activateMode(id, forceNewWindow = false) {
     await Storage.setActiveTabsForMode(id, createdTabIds);
     
     await loadModes(); // Recargar para actualizar el estado
-    showToast('Modo activado', 'success');
+    showToast('Mode activated', 'success');
   } catch (error) {
     showToast(error.message, 'error');
   }
@@ -529,12 +538,12 @@ async function activateModeAlternate(id) {
     const settings = await Storage.getSettings();
     
     if (!mode) {
-      showToast('Modo no encontrado', 'error');
+      showToast('Mode not found', 'error');
       return;
     }
 
     if (mode.urls.length === 0) {
-      showToast('Este modo no tiene URLs', 'error');
+      showToast('This mode has no URLs', 'error');
       return;
     }
 
@@ -553,7 +562,7 @@ async function activateModeAlternate(id) {
     await Storage.setActiveTabsForMode(id, [...existingTabs, ...createdTabIds]);
     
     await loadModes(); // Recargar para actualizar el estado
-    showToast('Modo activado', 'success');
+    showToast('Mode activated', 'success');
   } catch (error) {
     showToast(error.message, 'error');
   }
@@ -567,7 +576,7 @@ async function deactivateMode(id) {
     const trackedTabIds = activeTabsByMode[id] || [];
     
     if (trackedTabIds.length === 0) {
-      showToast('Este modo no tiene pestañas activas', 'error');
+      showToast('This mode has no active tabs', 'error');
       return;
     }
 
@@ -585,7 +594,7 @@ async function deactivateMode(id) {
       // Limpiar tracking y actualizar
       await Storage.clearActiveTabsForMode(id);
       await loadModes();
-      showToast('Las pestañas ya fueron cerradas', 'error');
+      showToast('Tabs were already closed', 'error');
       return;
     }
 
@@ -625,7 +634,7 @@ async function deactivateMode(id) {
     // Limpiar el tracking de este modo
     await Storage.clearActiveTabsForMode(id);
 
-    showToast(`${tabsToClose.length} pestaña${tabsToClose.length !== 1 ? 's' : ''} cerrada${tabsToClose.length !== 1 ? 's' : ''}`, 'success');
+    showToast(`${tabsToClose.length} tab${tabsToClose.length !== 1 ? 's' : ''} closed`, 'success');
     await loadModes();
   } catch (error) {
     showToast(error.message, 'error');
@@ -645,7 +654,7 @@ async function toggleNewWindowOption(id) {
     toggle.classList.toggle('active', newOpenIn === 'newWindow');
   }
   
-  showToast(newOpenIn === 'newWindow' ? 'Abrirá en nueva ventana' : 'Abrirá en ventana actual');
+  showToast(newOpenIn === 'newWindow' ? 'Will open in new window' : 'Will open in current window');
 }
 
 async function openRenameModal(id) {
@@ -655,7 +664,7 @@ async function openRenameModal(id) {
   if (!mode) return;
 
   editingModeId = id;
-  elements.modalTitle.textContent = 'Editar Modo';
+  elements.modalTitle.textContent = 'Edit Mode';
   elements.modeName.value = mode.name;
   elements.openIn.value = mode.openIn;
   selectIcon(mode.icon || '💼');
@@ -730,7 +739,7 @@ async function handleSaveUrls() {
   
   closeModal(elements.modalUrls);
   await loadModes();
-  showToast('URLs actualizadas');
+  showToast('URLs updated');
 }
 
 async function confirmDeleteMode(id) {
@@ -739,11 +748,11 @@ async function confirmDeleteMode(id) {
   
   if (!mode) return;
 
-  if (confirm(`¿Seguro que quieres borrar "${mode.name}"?`)) {
+  if (confirm(`Are you sure you want to delete "${mode.name}"?`)) {
     await Modes.delete(id);
     await loadModes();
     await updateLicenseUI();
-    showToast('Modo eliminado');
+    showToast('Mode deleted');
   }
 }
 
@@ -754,21 +763,58 @@ async function handleSaveSettings() {
 
   await Storage.saveSettings(settings);
   closeModal(elements.modalSettings);
-  showToast('Ajustes guardados');
+  showToast('Settings saved');
 }
 
 async function handleActivatePro() {
   const key = elements.licenseKey.value.trim();
   
+  if (!key) {
+    showToast('Please enter a license key', 'error');
+    return;
+  }
+
+  // Show loading state
+  elements.btnActivatePro.disabled = true;
+  elements.btnActivatePro.textContent = 'Verifying...';
+  
   const result = await License.activatePro(key);
   
-  if (result.success) {
-    showToast(result.message, 'success');
+  // Reset button state
+  elements.btnActivatePro.disabled = false;
+  elements.btnActivatePro.textContent = 'Activate';
+  
+  if (result.ok) {
+    showToast('Pro activated successfully!', 'success');
     closeModal(elements.modalPro);
+    elements.licenseKey.value = '';
     await updateLicenseUI();
   } else {
-    showToast(result.message, 'error');
+    if (result.error === 'network_error') {
+      showToast('Connection error. Please try again.', 'error');
+    } else if (result.error === 'device_mismatch') {
+      showToast('This license is already used on another device', 'error');
+    } else {
+      showToast('Invalid license key', 'error');
+    }
   }
+}
+
+function handleBuyPro() {
+  // Open Stripe checkout in new tab
+  chrome.tabs.create({ url: 'https://buy.stripe.com/8x28wQbdJfYlaKUaeogjC00' });
+  closeModal(elements.modalPro);
+}
+
+async function handleResetPro() {
+  if (!confirm('Reset Pro license? This will deactivate Pro.')) {
+    return;
+  }
+  
+  await License.resetPro();
+  closeModal(elements.modalSettings);
+  await updateLicenseUI();
+  showToast('Pro license reset', 'success');
 }
 
 // ============================================
