@@ -5,6 +5,7 @@
 // Estado de la aplicación
 let currentModes = [];
 let currentTabUrls = [];
+let activeTabsByMode = {}; // { modeId: [tabId1, tabId2, ...] }
 let editingModeId = null;
 let openDropdownId = null;
 let selectedIcon = '💼';
@@ -76,6 +77,7 @@ const elements = {
 document.addEventListener('DOMContentLoaded', init);
 
 async function init() {
+  await Storage.cleanupActiveTabs(); // Limpiar pestañas que ya no existen
   await loadModes();
   await loadSettings();
   await updateLicenseUI();
@@ -89,6 +91,7 @@ async function init() {
 async function loadModes() {
   currentModes = await Modes.getAll();
   currentTabUrls = await Modes.getCurrentTabUrls();
+  activeTabsByMode = await Storage.getActiveTabs();
   renderModes();
 }
 
@@ -113,6 +116,29 @@ async function updateLicenseUI() {
 }
 
 // ============================================
+// HELPERS
+// ============================================
+
+/**
+ * Verifica si un modo está activo (tiene pestañas trackeadas abiertas)
+ * @param {Object} mode - El modo a verificar
+ * @returns {boolean}
+ */
+function isModeActive(mode) {
+  const trackedTabs = activeTabsByMode[mode.id] || [];
+  return trackedTabs.length > 0;
+}
+
+/**
+ * Obtiene los modos que están activos
+ * Un modo está activo si tiene pestañas trackeadas
+ * @returns {Array} - Array de modos activos
+ */
+function getTrulyActiveModes() {
+  return currentModes.filter(mode => isModeActive(mode));
+}
+
+// ============================================
 // RENDERIZADO
 // ============================================
 
@@ -122,11 +148,12 @@ function renderModes() {
     return;
   }
 
+  // Usar el helper para obtener modos realmente activos
+  const trulyActiveModes = getTrulyActiveModes();
+  const activeModesIds = new Set(trulyActiveModes.map(m => m.id));
+
   elements.modesList.innerHTML = currentModes.map(mode => {
-    // Detectar si el modo está activo (todas sus URLs están abiertas)
-    const isActive = mode.urls.length > 0 && mode.urls.every(url => 
-      currentTabUrls.some(tabUrl => tabUrl === url || tabUrl.startsWith(url) || url.startsWith(tabUrl))
-    );
+    const isActive = activeModesIds.has(mode.id);
     
     return `
     <div class="mode-item ${isActive ? 'mode-active' : ''}" data-id="${mode.id}">
@@ -311,6 +338,29 @@ async function handleCloseAllTabs() {
   }
 }
 
+async function getUrlsExcludingActiveModes() {
+  // Obtener todas las pestañas actuales
+  const allTabs = await new Promise(resolve => {
+    chrome.tabs.query({ windowType: 'normal' }, resolve);
+  });
+  
+  // Obtener IDs de pestañas que pertenecen a modos activos
+  const activeTabIds = new Set();
+  for (const modeId of Object.keys(activeTabsByMode)) {
+    for (const tabId of activeTabsByMode[modeId]) {
+      activeTabIds.add(tabId);
+    }
+  }
+  
+  // Filtrar: solo incluir pestañas que NO están trackeadas por ningún modo
+  const filteredUrls = allTabs
+    .filter(tab => !activeTabIds.has(tab.id))
+    .filter(tab => tab.url && !tab.url.startsWith('chrome://') && !tab.url.startsWith('chrome-extension://'))
+    .map(tab => tab.url);
+  
+  return Modes.removeDuplicates(filteredUrls);
+}
+
 async function handleSaveMode() {
   const name = elements.modeName.value.trim();
   
@@ -334,8 +384,13 @@ async function handleSaveMode() {
   } else {
     // Creando nuevo modo
     if (elements.saveCurrentTabs.checked) {
-      urls = await Modes.getCurrentTabUrls();
-      urls = Modes.removeDuplicates(urls);
+      // Capturar URLs excluyendo las de modos activos
+      urls = await getUrlsExcludingActiveModes();
+      
+      if (urls.length === 0) {
+        showToast('No hay pestañas nuevas para capturar (todas pertenecen a modos activos)', 'error');
+        return;
+      }
     }
     
     await Modes.create({
@@ -344,7 +399,7 @@ async function handleSaveMode() {
       urls,
       openIn: elements.openIn.value
     });
-    showToast('Modo guardado');
+    showToast(`Modo guardado (${urls.length} pestañas)`);
   }
 
   closeModal(elements.modalMode);
@@ -399,19 +454,38 @@ async function handleRecaptureTabs(id) {
   
   if (!mode) return;
 
-  const currentUrls = await Modes.getCurrentTabUrls();
+  // Obtener todas las pestañas actuales
+  const allTabs = await new Promise(resolve => {
+    chrome.tabs.query({ windowType: 'normal' }, resolve);
+  });
   
-  if (currentUrls.length === 0) {
+  // Obtener IDs de pestañas que pertenecen a OTROS modos activos
+  const otherActiveTabIds = new Set();
+  for (const modeId of Object.keys(activeTabsByMode)) {
+    if (modeId !== id) { // Excluir el modo actual
+      for (const tabId of activeTabsByMode[modeId]) {
+        otherActiveTabIds.add(tabId);
+      }
+    }
+  }
+  
+  // Filtrar: pestañas que NO pertenecen a otros modos activos
+  const availableTabs = allTabs
+    .filter(tab => !otherActiveTabIds.has(tab.id))
+    .filter(tab => tab.url && !tab.url.startsWith('chrome://') && !tab.url.startsWith('chrome-extension://'));
+  
+  const uniqueUrls = Modes.removeDuplicates(availableTabs.map(t => t.url));
+  
+  if (uniqueUrls.length === 0) {
     showToast('No hay pestañas para capturar', 'error');
     return;
   }
 
   const confirmed = confirm(
-    `¿Reemplazar las ${mode.urls.length} pestañas guardadas en "${mode.name}" por las ${currentUrls.length} pestañas actuales?`
+    `¿Reemplazar las ${mode.urls.length} pestañas guardadas en "${mode.name}" por ${uniqueUrls.length} pestañas?`
   );
 
   if (confirmed) {
-    const uniqueUrls = Modes.removeDuplicates(currentUrls);
     await Modes.update(id, { urls: uniqueUrls });
     await loadModes();
     showToast(`Pestañas recapturadas (${uniqueUrls.length})`, 'success');
@@ -438,7 +512,11 @@ async function activateMode(id, forceNewWindow = false) {
       ? { ...mode, openIn: 'newWindow' } 
       : mode;
 
-    await Activate.activateMode(modeToActivate, settings);
+    // Activar y guardar los IDs de las pestañas creadas
+    const createdTabIds = await Activate.activateMode(modeToActivate, settings);
+    await Storage.setActiveTabsForMode(id, createdTabIds);
+    
+    await loadModes(); // Recargar para actualizar el estado
     showToast('Modo activado', 'success');
   } catch (error) {
     showToast(error.message, 'error');
@@ -467,7 +545,14 @@ async function activateModeAlternate(id) {
     // El botón "+" nunca cierra pestañas existentes
     const settingsOverride = { ...settings, closeOtherTabs: false };
 
-    await Activate.activateMode(modeToActivate, settingsOverride);
+    // Activar y guardar los IDs de las pestañas creadas
+    const createdTabIds = await Activate.activateMode(modeToActivate, settingsOverride);
+    
+    // Añadir a las pestañas existentes del modo (no reemplazar)
+    const existingTabs = activeTabsByMode[id] || [];
+    await Storage.setActiveTabsForMode(id, [...existingTabs, ...createdTabIds]);
+    
+    await loadModes(); // Recargar para actualizar el estado
     showToast('Modo activado', 'success');
   } catch (error) {
     showToast(error.message, 'error');
@@ -478,43 +563,70 @@ async function deactivateMode(id) {
   closeAllDropdowns();
   
   try {
-    const mode = await Modes.getById(id);
+    // Obtener las pestañas trackeadas de este modo
+    const trackedTabIds = activeTabsByMode[id] || [];
     
-    if (!mode) {
-      showToast('Modo no encontrado', 'error');
+    if (trackedTabIds.length === 0) {
+      showToast('Este modo no tiene pestañas activas', 'error');
       return;
     }
 
-    // Obtener todas las pestañas actuales
-    const tabs = await new Promise(resolve => {
-      chrome.tabs.query({ currentWindow: true }, resolve);
+    // Obtener todas las pestañas actuales para verificar cuáles existen
+    const allTabs = await new Promise(resolve => {
+      chrome.tabs.query({ windowType: 'normal' }, resolve);
     });
-
-    // Encontrar las pestañas que coinciden con las URLs del modo
-    const tabsToClose = tabs.filter(tab => 
-      mode.urls.some(url => tab.url === url || tab.url.startsWith(url) || url.startsWith(tab.url))
-    );
-
+    
+    const existingTabIds = new Set(allTabs.map(t => t.id));
+    
+    // Filtrar solo las pestañas que aún existen
+    const tabsToClose = trackedTabIds.filter(id => existingTabIds.has(id));
+    
     if (tabsToClose.length === 0) {
-      showToast('No hay pestañas del modo abiertas', 'error');
+      // Limpiar tracking y actualizar
+      await Storage.clearActiveTabsForMode(id);
+      await loadModes();
+      showToast('Las pestañas ya fueron cerradas', 'error');
       return;
     }
 
-    // Si se van a cerrar todas las pestañas, crear una nueva en blanco primero
-    if (tabsToClose.length === tabs.length) {
-      await new Promise(resolve => {
-        chrome.tabs.create({ url: 'chrome://newtab' }, resolve);
-      });
+    // Agrupar por ventana para verificar si alguna quedará vacía
+    const tabsByWindow = {};
+    allTabs.forEach(tab => {
+      if (!tabsByWindow[tab.windowId]) tabsByWindow[tab.windowId] = [];
+      tabsByWindow[tab.windowId].push(tab);
+    });
+
+    const tabsToCloseByWindow = {};
+    for (const tabId of tabsToClose) {
+      const tab = allTabs.find(t => t.id === tabId);
+      if (tab) {
+        if (!tabsToCloseByWindow[tab.windowId]) tabsToCloseByWindow[tab.windowId] = [];
+        tabsToCloseByWindow[tab.windowId].push(tab);
+      }
     }
 
-    // Cerrar las pestañas del modo
-    const tabIds = tabsToClose.map(tab => tab.id);
+    // Si alguna ventana quedará vacía, crear una pestaña nueva
+    for (const windowId of Object.keys(tabsToCloseByWindow)) {
+      const totalInWindow = tabsByWindow[windowId]?.length || 0;
+      const toCloseInWindow = tabsToCloseByWindow[windowId]?.length || 0;
+      
+      if (totalInWindow === toCloseInWindow) {
+        await new Promise(resolve => {
+          chrome.tabs.create({ url: 'chrome://newtab', windowId: parseInt(windowId) }, resolve);
+        });
+      }
+    }
+
+    // Cerrar las pestañas trackeadas
     await new Promise(resolve => {
-      chrome.tabs.remove(tabIds, resolve);
+      chrome.tabs.remove(tabsToClose, resolve);
     });
+
+    // Limpiar el tracking de este modo
+    await Storage.clearActiveTabsForMode(id);
 
     showToast(`${tabsToClose.length} pestaña${tabsToClose.length !== 1 ? 's' : ''} cerrada${tabsToClose.length !== 1 ? 's' : ''}`, 'success');
-    await loadModes(); // Recargar para actualizar el estado
+    await loadModes();
   } catch (error) {
     showToast(error.message, 'error');
   }

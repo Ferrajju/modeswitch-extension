@@ -7,7 +7,7 @@ const Activate = {
    * Activa un modo: abre todas sus URLs
    * @param {Object} mode - El modo a activar
    * @param {Object} settings - Ajustes globales
-   * @returns {Promise<void>}
+   * @returns {Promise<Array<number>>} - IDs de las pestañas creadas
    */
   async activateMode(mode, settings = {}) {
     if (!mode || !mode.urls || mode.urls.length === 0) {
@@ -18,10 +18,10 @@ const Activate = {
 
     if (mode.openIn === 'newWindow') {
       // Abrir en nueva ventana
-      await this.openInNewWindow(mode.urls);
+      return await this.openInNewWindow(mode.urls);
     } else {
       // Abrir en ventana actual
-      await this.openInCurrentWindow(mode.urls, closeOtherTabs);
+      return await this.openInCurrentWindow(mode.urls, closeOtherTabs);
     }
   },
 
@@ -29,7 +29,7 @@ const Activate = {
    * Abre URLs en la ventana actual
    * @param {Array<string>} urls
    * @param {boolean} closeOthers - Si cerrar las otras pestañas
-   * @returns {Promise<void>}
+   * @returns {Promise<Array<number>>} - IDs de las pestañas creadas
    */
   async openInCurrentWindow(urls, closeOthers = false) {
     return new Promise(async (resolve) => {
@@ -48,14 +48,15 @@ const Activate = {
           });
         });
 
-        await Promise.all(createPromises);
+        const createdTabs = await Promise.all(createPromises);
+        const createdTabIds = createdTabs.map(tab => tab.id);
 
         // Cerrar pestañas anteriores si está habilitado
         if (closeOthers && existingTabIds.length > 0) {
           chrome.tabs.remove(existingTabIds);
         }
 
-        resolve();
+        resolve(createdTabIds);
       });
     });
   },
@@ -63,7 +64,7 @@ const Activate = {
   /**
    * Abre URLs en una nueva ventana
    * @param {Array<string>} urls
-   * @returns {Promise<void>}
+   * @returns {Promise<Array<number>>} - IDs de las pestañas creadas
    */
   async openInNewWindow(urls) {
     return new Promise((resolve) => {
@@ -72,6 +73,9 @@ const Activate = {
         url: urls[0],
         focused: true
       }, async (newWindow) => {
+        // La primera pestaña ya está creada
+        const createdTabIds = [newWindow.tabs[0].id];
+        
         // Abrir el resto de URLs en la nueva ventana
         if (urls.length > 1) {
           const remainingUrls = urls.slice(1);
@@ -84,9 +88,10 @@ const Activate = {
               }, res);
             });
           });
-          await Promise.all(createPromises);
+          const moreTabs = await Promise.all(createPromises);
+          createdTabIds.push(...moreTabs.map(tab => tab.id));
         }
-        resolve();
+        resolve(createdTabIds);
       });
     });
   }

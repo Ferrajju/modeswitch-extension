@@ -104,12 +104,12 @@ const Modes = {
   },
 
   /**
-   * Obtiene las URLs de las pestañas actuales
+   * Obtiene las URLs de las pestañas actuales (todas las ventanas)
    * @returns {Promise<Array<string>>}
    */
   async getCurrentTabUrls() {
     return new Promise((resolve) => {
-      chrome.tabs.query({ currentWindow: true }, (tabs) => {
+      chrome.tabs.query({ windowType: 'normal' }, (tabs) => {
         const urls = tabs
           .map(tab => tab.url)
           .filter(url => url && !url.startsWith('chrome://') && !url.startsWith('chrome-extension://'));
@@ -125,6 +125,70 @@ const Modes = {
    */
   removeDuplicates(urls) {
     return [...new Set(urls)];
+  },
+
+  /**
+   * Extrae el dominio base de una URL
+   * @param {string} url
+   * @returns {string|null}
+   */
+  getDomain(url) {
+    try {
+      const urlObj = new URL(url);
+      return urlObj.hostname;
+    } catch {
+      return null;
+    }
+  },
+
+  /**
+   * Compara si dos URLs son del mismo dominio
+   * @param {string} url1
+   * @param {string} url2
+   * @returns {boolean}
+   */
+  isSameDomain(url1, url2) {
+    const domain1 = this.getDomain(url1);
+    const domain2 = this.getDomain(url2);
+    
+    if (!domain1 || !domain2) return false;
+    
+    // Comparar dominios (ignorando www)
+    const clean1 = domain1.replace(/^www\./, '');
+    const clean2 = domain2.replace(/^www\./, '');
+    
+    return clean1 === clean2;
+  },
+
+  /**
+   * Verifica si una URL de pestaña coincide con una URL de modo
+   * Compara por dominio para permitir navegación interna
+   * @param {string} tabUrl - URL actual de la pestaña
+   * @param {string} modeUrl - URL guardada en el modo
+   * @returns {boolean}
+   */
+  urlMatches(tabUrl, modeUrl) {
+    // Primero intentar coincidencia exacta o por prefijo
+    if (tabUrl === modeUrl || tabUrl.startsWith(modeUrl) || modeUrl.startsWith(tabUrl)) {
+      return true;
+    }
+    
+    // Si no hay coincidencia exacta, comparar por dominio
+    return this.isSameDomain(tabUrl, modeUrl);
+  },
+
+  /**
+   * Comparación estricta: solo coincide si es la misma URL o prefijo
+   * NO compara por dominio - usado para protección al cerrar modos
+   * @param {string} tabUrl - URL actual de la pestaña
+   * @param {string} modeUrl - URL guardada en el modo
+   * @returns {boolean}
+   */
+  urlMatchesStrict(tabUrl, modeUrl) {
+    if (!tabUrl || !modeUrl) return false;
+    
+    // Solo coincidencia exacta o por prefijo, NO por dominio
+    return tabUrl === modeUrl || tabUrl.startsWith(modeUrl) || modeUrl.startsWith(tabUrl);
   },
 
   /**

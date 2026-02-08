@@ -114,5 +114,91 @@ const Storage = {
    */
   generateId() {
     return Date.now().toString(36) + Math.random().toString(36).substr(2, 9);
+  },
+
+  // ============================================
+  // TRACKING DE PESTAÑAS ACTIVAS
+  // ============================================
+
+  /**
+   * Obtiene las pestañas activas de todos los modos
+   * @returns {Promise<Object>} - { modeId: [tabId1, tabId2, ...], ... }
+   */
+  async getActiveTabs() {
+    return new Promise((resolve) => {
+      chrome.storage.local.get('activeTabs', (result) => {
+        resolve(result.activeTabs || {});
+      });
+    });
+  },
+
+  /**
+   * Guarda las pestañas activas de un modo
+   * @param {string} modeId - ID del modo
+   * @param {Array<number>} tabIds - IDs de las pestañas
+   * @returns {Promise<void>}
+   */
+  async setActiveTabsForMode(modeId, tabIds) {
+    const activeTabs = await this.getActiveTabs();
+    activeTabs[modeId] = tabIds;
+    return new Promise((resolve) => {
+      chrome.storage.local.set({ activeTabs }, resolve);
+    });
+  },
+
+  /**
+   * Obtiene las pestañas activas de un modo específico
+   * @param {string} modeId - ID del modo
+   * @returns {Promise<Array<number>>}
+   */
+  async getActiveTabsForMode(modeId) {
+    const activeTabs = await this.getActiveTabs();
+    return activeTabs[modeId] || [];
+  },
+
+  /**
+   * Elimina el tracking de pestañas de un modo
+   * @param {string} modeId - ID del modo
+   * @returns {Promise<void>}
+   */
+  async clearActiveTabsForMode(modeId) {
+    const activeTabs = await this.getActiveTabs();
+    delete activeTabs[modeId];
+    return new Promise((resolve) => {
+      chrome.storage.local.set({ activeTabs }, resolve);
+    });
+  },
+
+  /**
+   * Limpia pestañas que ya no existen
+   * @returns {Promise<void>}
+   */
+  async cleanupActiveTabs() {
+    const activeTabs = await this.getActiveTabs();
+    const existingTabs = await new Promise(resolve => {
+      chrome.tabs.query({}, tabs => resolve(tabs.map(t => t.id)));
+    });
+    
+    const existingSet = new Set(existingTabs);
+    let changed = false;
+    
+    for (const modeId of Object.keys(activeTabs)) {
+      const filtered = activeTabs[modeId].filter(id => existingSet.has(id));
+      if (filtered.length !== activeTabs[modeId].length) {
+        activeTabs[modeId] = filtered;
+        changed = true;
+      }
+      // Si no quedan pestañas, eliminar el modo del tracking
+      if (activeTabs[modeId].length === 0) {
+        delete activeTabs[modeId];
+        changed = true;
+      }
+    }
+    
+    if (changed) {
+      return new Promise((resolve) => {
+        chrome.storage.local.set({ activeTabs }, resolve);
+      });
+    }
   }
 };
