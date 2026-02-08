@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ModeSwitch</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header class="header">
+      <h1 class="logo">ModeSwitch</h1>
+      <button id="btn-settings" class="btn-icon" title="Ajustes">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="3"></circle>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+        </svg>
+      </button>
+    </header>
+    
+    <div class="header-divider"></div>
+
+    <!-- Botón principal destacado -->
+    <button id="btn-save-current" class="btn-hero">
+      <span class="btn-hero-glow"></span>
+      <span class="btn-hero-content">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M12 5v14M5 12h14"></path>
+        </svg>
+        Crear nuevo modo
+      </span>
+    </button>
+
+    <!-- Botón cerrar todo - estilo danger -->
+    <button id="btn-close-all" class="btn-danger-clear" title="Cerrar todas las pestañas">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="3 6 5 6 21 6"></polyline>
+        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+        <line x1="10" y1="11" x2="10" y2="17"></line>
+        <line x1="14" y1="11" x2="14" y2="17"></line>
+      </svg>
+      Cerrar todas las pestañas
+    </button>
+
+    <!-- Lista de modos -->
+    <section class="modes-section">
+      <h2 class="section-title">Mis Modos</h2>
+      <div id="modes-list" class="modes-list">
+        <!-- Los modos se cargan dinámicamente -->
+        <p class="empty-state">No tienes modos guardados</p>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer" id="footer">
+      <div id="footer-free" class="footer-content">
+        <span id="modes-count" class="modes-count">0/2 modos</span>
+        <button id="btn-unlock-pro" class="btn-pro-compact">
+          <span class="btn-pro-icon">⚡</span>
+          Pro
+        </button>
+      </div>
+      <div id="footer-pro" class="footer-content footer-pro hidden">
+        <span class="pro-badge-compact">👑 Pro activo</span>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Modal Crear/Editar Modo -->
+  <div id="modal-mode" class="modal hidden">
+    <div class="modal-backdrop"></div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="modal-title">Crear Modo</h3>
+        <button class="btn-close" id="btn-close-modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="mode-name">Nombre del modo</label>
+          <input type="text" id="mode-name" placeholder="Ej: Trabajo, Estudio..." maxlength="30">
+        </div>
+        <div class="form-group">
+          <label>Icono del modo</label>
+          <div id="icon-picker" class="icon-picker">
+            <!-- Trabajo y Productividad -->
+            <button type="button" class="icon-option selected" data-icon="💼">💼</button>
+            <button type="button" class="icon-option" data-icon="📊">📊</button>
+            <button type="button" class="icon-option" data-icon="📈">📈</button>
+            <button type="button" class="icon-option" data-icon="💰">💰</button>
+            <button type="button" class="icon-option" data-icon="🏢">🏢</button>
+            <button type="button" class="icon-option" data-icon="📋">📋</button>
+            <button type="button" class="icon-option" data-icon="📝">📝</button>
+            <button type="button" class="icon-option" data-icon="✅">✅</button>
+            <!-- Estudio y Educación -->
+            <button type="button" class="icon-option" data-icon="📚">📚</button>
+            <button type="button" class="icon-option" data-icon="📖">📖</button>
+            <button type="button" class="icon-option" data-icon="✏️">✏️</button>
+            <button type="button" class="icon-option" data-icon="🎓">🎓</button>
+            <button type="button" class="icon-option" data-icon="🔬">🔬</button>
+            <button type="button" class="icon-option" data-icon="🧪">🧪</button>
+            <button type="button" class="icon-option" data-icon="📐">📐</button>
+            <button type="button" class="icon-option" data-icon="🧮">🧮</button>
+            <!-- Tecnología -->
+            <button type="button" class="icon-option" data-icon="💻">💻</button>
+            <button type="button" class="icon-option" data-icon="🖥️">🖥️</button>
+            <button type="button" class="icon-option" data-icon="⌨️">⌨️</button>
+            <button type="button" class="icon-option" data-icon="🔧">🔧</button>
+            <button type="button" class="icon-option" data-icon="⚙️">⚙️</button>
+            <button type="button" class="icon-option" data-icon="🛠️">🛠️</button>
+            <button type="button" class="icon-option" data-icon="🔌">🔌</button>
+            <button type="button" class="icon-option" data-icon="📱">📱</button>
+            <!-- Entretenimiento -->
+            <button type="button" class="icon-option" data-icon="🎮">🎮</button>
+            <button type="button" class="icon-option" data-icon="🎬">🎬</button>
+            <button type="button" class="icon-option" data-icon="🎵">🎵</button>
+            <button type="button" class="icon-option" data-icon="🎧">🎧</button>
+            <button type="button" class="icon-option" data-icon="🎤">🎤</button>
+            <button type="button" class="icon-option" data-icon="📺">📺</button>
+            <button type="button" class="icon-option" data-icon="🎨">🎨</button>
+            <button type="button" class="icon-option" data-icon="🎭">🎭</button>
+            <!-- Comunicación -->
+            <button type="button" class="icon-option" data-icon="📧">📧</button>
+            <button type="button" class="icon-option" data-icon="💬">💬</button>
+            <button type="button" class="icon-option" data-icon="📞">📞</button>
+            <button type="button" class="icon-option" data-icon="🗣️">🗣️</button>
+            <button type="button" class="icon-option" data-icon="👥">👥</button>
+            <button type="button" class="icon-option" data-icon="🤝">🤝</button>
+            <button type="button" class="icon-option" data-icon="📢">📢</button>
+            <button type="button" class="icon-option" data-icon="📣">📣</button>
+            <!-- Compras y Finanzas -->
+            <button type="button" class="icon-option" data-icon="🛒">🛒</button>
+            <button type="button" class="icon-option" data-icon="🛍️">🛍️</button>
+            <button type="button" class="icon-option" data-icon="💳">💳</button>
+            <button type="button" class="icon-option" data-icon="🏦">🏦</button>
+            <button type="button" class="icon-option" data-icon="💵">💵</button>
+            <button type="button" class="icon-option" data-icon="📦">📦</button>
+            <button type="button" class="icon-option" data-icon="🎁">🎁</button>
+            <button type="button" class="icon-option" data-icon="🏷️">🏷️</button>
+            <!-- Noticias y Lectura -->
+            <button type="button" class="icon-option" data-icon="📰">📰</button>
+            <button type="button" class="icon-option" data-icon="🗞️">🗞️</button>
+            <button type="button" class="icon-option" data-icon="📄">📄</button>
+            <button type="button" class="icon-option" data-icon="🌐">🌐</button>
+            <button type="button" class="icon-option" data-icon="🔍">🔍</button>
+            <button type="button" class="icon-option" data-icon="📡">📡</button>
+            <button type="button" class="icon-option" data-icon="📻">📻</button>
+            <button type="button" class="icon-option" data-icon="🎙️">🎙️</button>
+            <!-- Hogar y Vida -->
+            <button type="button" class="icon-option" data-icon="🏠">🏠</button>
+            <button type="button" class="icon-option" data-icon="🏡">🏡</button>
+            <button type="button" class="icon-option" data-icon="🛋️">🛋️</button>
+            <button type="button" class="icon-option" data-icon="🛏️">🛏️</button>
+            <button type="button" class="icon-option" data-icon="🍳">🍳</button>
+            <button type="button" class="icon-option" data-icon="🍕">🍕</button>
+            <button type="button" class="icon-option" data-icon="☕">☕</button>
+            <button type="button" class="icon-option" data-icon="🍺">🍺</button>
+            <!-- Deporte y Salud -->
+            <button type="button" class="icon-option" data-icon="⚽">⚽</button>
+            <button type="button" class="icon-option" data-icon="🏀">🏀</button>
+            <button type="button" class="icon-option" data-icon="🎾">🎾</button>
+            <button type="button" class="icon-option" data-icon="🏋️">🏋️</button>
+            <button type="button" class="icon-option" data-icon="🧘">🧘</button>
+            <button type="button" class="icon-option" data-icon="🏃">🏃</button>
+            <button type="button" class="icon-option" data-icon="💪">💪</button>
+            <button type="button" class="icon-option" data-icon="❤️">❤️</button>
+            <!-- Viajes -->
+            <button type="button" class="icon-option" data-icon="✈️">✈️</button>
+            <button type="button" class="icon-option" data-icon="🚗">🚗</button>
+            <button type="button" class="icon-option" data-icon="🚀">🚀</button>
+            <button type="button" class="icon-option" data-icon="🗺️">🗺️</button>
+            <button type="button" class="icon-option" data-icon="🏖️">🏖️</button>
+            <button type="button" class="icon-option" data-icon="⛰️">⛰️</button>
+            <button type="button" class="icon-option" data-icon="🏕️">🏕️</button>
+            <button type="button" class="icon-option" data-icon="🌍">🌍</button>
+            <!-- Creatividad -->
+            <button type="button" class="icon-option" data-icon="🖌️">🖌️</button>
+            <button type="button" class="icon-option" data-icon="✨">✨</button>
+            <button type="button" class="icon-option" data-icon="💡">💡</button>
+            <button type="button" class="icon-option" data-icon="🌟">🌟</button>
+            <button type="button" class="icon-option" data-icon="⭐">⭐</button>
+            <button type="button" class="icon-option" data-icon="🔥">🔥</button>
+            <button type="button" class="icon-option" data-icon="⚡">⚡</button>
+            <button type="button" class="icon-option" data-icon="🌈">🌈</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="checkbox-label">
+            <input type="checkbox" id="save-current-tabs" checked>
+            Guardar pestañas actuales
+          </label>
+        </div>
+        <div class="form-group">
+          <label for="open-in">Abrir en</label>
+          <select id="open-in">
+            <option value="currentWindow">Misma ventana</option>
+            <option value="newWindow">Nueva ventana</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="btn-cancel-mode" class="btn-secondary">Cancelar</button>
+        <button id="btn-save-mode" class="btn-primary">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Editar URLs -->
+  <div id="modal-urls" class="modal hidden">
+    <div class="modal-backdrop"></div>
+    <div class="modal-content modal-urls-content">
+      <div class="modal-header">
+        <h3>Editar URLs</h3>
+        <button class="btn-close" id="btn-close-urls-modal">&times;</button>
+      </div>
+      <div class="modal-body modal-urls-body">
+        <div id="urls-list" class="urls-list">
+          <!-- URLs se cargan dinámicamente -->
+        </div>
+      </div>
+      <div class="modal-footer modal-urls-footer">
+        <button id="btn-add-url" class="btn-add-url">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          Añadir URL
+        </button>
+        <div class="modal-footer-actions">
+          <button id="btn-cancel-urls" class="btn-secondary">Cancelar</button>
+          <button id="btn-save-urls" class="btn-primary">Guardar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Ajustes -->
+  <div id="modal-settings" class="modal hidden">
+    <div class="modal-backdrop"></div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Ajustes</h3>
+        <button class="btn-close" id="btn-close-settings">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="checkbox-label">
+            <input type="checkbox" id="close-other-tabs">
+            Cerrar otras pestañas al activar un modo
+          </label>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="btn-save-settings" class="btn-primary">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Pro -->
+  <div id="modal-pro" class="modal hidden">
+    <div class="modal-backdrop"></div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Activar Pro</h3>
+        <button class="btn-close" id="btn-close-pro">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p class="pro-description">Desbloquea modos ilimitados con tu clave de licencia.</p>
+        <div class="form-group">
+          <label for="license-key">Clave de licencia</label>
+          <input type="text" id="license-key" placeholder="XXXX-XXXX-XXXX-XXXX">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="btn-cancel-pro" class="btn-secondary">Cancelar</button>
+        <button id="btn-activate-pro" class="btn-primary">Activar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast notifications -->
+  <div id="toast" class="toast hidden"></div>
+
+  <script src="../core/storage.js"></script>
+  <script src="../core/modes.js"></script>
+  <script src="../core/activate.js"></script>
+  <script src="../core/license.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>
