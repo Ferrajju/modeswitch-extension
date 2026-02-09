@@ -1,42 +1,34 @@
-# Privacy Policy - ModeSwitch
+# Privacy Policy – ModeSwitch
 
-**Last updated:** February 2026
-
-## Summary
-
-ModeSwitch does not collect, store, or transmit any personal data. Everything stays on your device.
+ModeSwitch does not collect, store, or transmit any personal data.
 
 ## Data Collection
+The extension works entirely locally in the user's browser.
+No browsing data, personal information, or user content is sent to any server.
 
-**We do not collect any data.** ModeSwitch operates entirely offline and locally.
+## Local Storage
+ModeSwitch uses `chrome.storage.local` only to save:
+- Created modes
+- Saved URLs
+- Extension settings
+- License activation status
 
-## Data Storage
+All data remains on the user's device.
 
-All data is stored locally on your device using Chrome's `chrome.storage.local` API. This includes:
+## Payments
+Payments for ModeSwitch Pro are handled by Stripe.
+ModeSwitch does not have access to payment details, personal information, or financial data.
 
-- Your saved modes (names, icons, URLs)
-- Your settings and preferences
-- License activation status (if applicable)
+## License Verification
+License verification is performed via a secure request that only checks the validity of the license key.
+No personal data is collected or stored.
 
-This data never leaves your browser.
+## Third Parties
+ModeSwitch does not sell, share, or transfer user data to third parties.
 
-## Third-Party Services
-
-ModeSwitch does not use any third-party services, analytics, or tracking tools.
-
-## Network Access
-
-ModeSwitch does not require network access and does not make any external HTTP requests.
-
-## Permissions Used
-
-- **storage**: To save your modes and settings locally
-- **tabs**: To read, create, and close browser tabs
-
-## Data Deletion
-
-To delete all data, simply uninstall the extension. All locally stored data will be removed automatically.
+## Changes
+This privacy policy may be updated if required by future changes.
 
 ## Contact
-
-For questions about this privacy policy, please open an issue on the project repository.
+If you have questions, you can contact:
+Bielferrer123@gmail.com
