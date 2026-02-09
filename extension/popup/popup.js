@@ -52,8 +52,6 @@ const elements = {
   closeOtherTabs: document.getElementById('close-other-tabs'),
   btnCloseSettings: document.getElementById('btn-close-settings'),
   btnSaveSettings: document.getElementById('btn-save-settings'),
-  resetProGroup: document.getElementById('reset-pro-group'),
-  btnResetPro: document.getElementById('btn-reset-pro'),
   
   // Modal Pro
   modalPro: document.getElementById('modal-pro'),
@@ -111,15 +109,11 @@ async function updateLicenseUI() {
     // Show Pro footer, hide free footer
     elements.footerFree.classList.add('hidden');
     elements.footerPro.classList.remove('hidden');
-    // Show reset button in settings
-    elements.resetProGroup.style.display = 'block';
   } else {
     // Show free footer, hide Pro footer
     elements.footerFree.classList.remove('hidden');
     elements.footerPro.classList.add('hidden');
     elements.modesCount.textContent = `${info.modesCount}/${info.modesLimit} modes`;
-    // Hide reset button in settings
-    elements.resetProGroup.style.display = 'none';
   }
 }
 
@@ -319,7 +313,6 @@ function setupEventListeners() {
   // Modal ajustes
   elements.btnCloseSettings.addEventListener('click', () => closeModal(elements.modalSettings));
   elements.btnSaveSettings.addEventListener('click', handleSaveSettings);
-  elements.btnResetPro.addEventListener('click', handleResetPro);
   elements.modalSettings.querySelector('.modal-backdrop').addEventListener('click', () => closeModal(elements.modalSettings));
   
   // Modal Pro
@@ -432,7 +425,6 @@ async function handleCloseAllTabs() {
     await tabsRemove(idsToClose);
 
     if (chrome.runtime.lastError) {
-      console.warn('tabs.remove error:', chrome.runtime.lastError.message);
       showToast('Error closing tabs', 'error');
       return;
     }
@@ -760,8 +752,7 @@ async function deactivateMode(id) {
       'success'
     );
 
-  } catch (err) {
-    console.error(err);
+  } catch {
     showToast('Error closing mode', 'error');
   }
 }
@@ -932,16 +923,6 @@ function handleBuyPro() {
   closeModal(elements.modalPro);
 }
 
-async function handleResetPro() {
-  if (!confirm('Reset Pro license? This will deactivate Pro.')) {
-    return;
-  }
-  
-  await License.resetPro();
-  closeModal(elements.modalSettings);
-  await updateLicenseUI();
-  showToast('Pro license reset', 'success');
-}
 
 // ============================================
 // UTILIDADES UI

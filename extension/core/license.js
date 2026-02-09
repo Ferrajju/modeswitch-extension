@@ -6,9 +6,6 @@ const License = {
   // Free version mode limit
   FREE_MODE_LIMIT: 2,
 
-  // Developer master key (bypasses webhook)
-  MASTER_KEY: 'BielFerrer',
-
   // Webhook URL for license validation
   WEBHOOK_URL: 'https://bielferrer.app.n8n.cloud/webhook/91621004-7c67-44f7-b352-6087fec0c2d5',
 
@@ -67,11 +64,6 @@ const License = {
       return { ok: false, error: 'invalid_key' };
     }
 
-    // Master key bypasses webhook
-    if (cleanKey === this.MASTER_KEY.toUpperCase()) {
-      return { ok: true, isMaster: true };
-    }
-
     // Get or create device ID
     const deviceId = await Storage.getDeviceId();
 
@@ -114,11 +106,9 @@ const License = {
     const result = await this.verifyLicenseKey(cleanKey);
 
     if (result.ok) {
-      // Save license to storage
+      // Save license to storage (only status, not the key itself)
       await Storage.saveLicense({
         isPro: true,
-        key: result.isMaster ? '🔑 MASTER KEY' : cleanKey,
-        isMaster: result.isMaster || false,
         activatedAt: Date.now()
       });
       return { ok: true };
@@ -127,18 +117,6 @@ const License = {
     return { ok: false, error: result.error };
   },
 
-  /**
-   * Reset/deactivate Pro license (for testing)
-   * @returns {Promise<void>}
-   */
-  async resetPro() {
-    await Storage.saveLicense({
-      isPro: false,
-      key: null,
-      isMaster: false,
-      activatedAt: null
-    });
-  },
 
   /**
    * Get license info for display
