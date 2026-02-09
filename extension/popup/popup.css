@@ -339,6 +339,8 @@ body {
   border: 1px solid var(--border);
   transition: all 0.2s ease;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  position: relative;
+  z-index: 1;
 }
 
 .mode-item:hover {
@@ -508,15 +510,15 @@ body {
 .dropdown-menu {
   position: absolute;
   right: 0;
-  top: 100%;
+  bottom: 100%;
   background: var(--bg);
   border: 1px solid var(--border);
+  margin-bottom: 4px;
   border-radius: var(--radius);
   box-shadow: var(--shadow-lg);
   min-width: 180px;
-  z-index: 100;
-  overflow: hidden;
-  margin-top: 4px;
+  z-index: 1000;
+  overflow: visible;
 }
 
 .dropdown-menu.hidden {
@@ -608,6 +610,8 @@ body {
 .footer {
   padding-top: 12px;
   border-top: 1px solid var(--border);
+  position: relative;
+  z-index: 0;
 }
 
 .footer-content {
@@ -621,6 +625,12 @@ body {
   display: none;
 }
 
+/* Footer Free vertical layout */
+.footer-free-vertical {
+  flex-direction: column;
+  gap: 8px;
+}
+
 .modes-count {
   font-size: 11px;
   color: var(--text-secondary);
@@ -630,26 +640,29 @@ body {
   font-weight: 500;
 }
 
-/* Botón Pro compacto */
-.btn-pro-compact {
+/* Botón Pro Upgrade - más visible */
+.btn-pro-upgrade {
   background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
   color: white;
   border: none;
-  padding: 6px 12px;
-  border-radius: 20px;
-  font-size: 11px;
+  padding: 10px 24px;
+  border-radius: 24px;
+  font-size: 13px;
   font-weight: 700;
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 4px;
+  justify-content: center;
+  gap: 6px;
   transition: all 0.2s;
-  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+  box-shadow: 0 3px 12px rgba(245, 158, 11, 0.35);
   position: relative;
   overflow: hidden;
+  width: 100%;
+  max-width: 200px;
 }
 
-.btn-pro-compact::before {
+.btn-pro-upgrade::before {
   content: '';
   position: absolute;
   top: 0;
@@ -660,13 +673,13 @@ body {
   animation: proShimmer 2s infinite;
 }
 
-.btn-pro-compact:hover {
-  transform: scale(1.05);
-  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
+.btn-pro-upgrade:hover {
+  transform: scale(1.03);
+  box-shadow: 0 5px 16px rgba(245, 158, 11, 0.45);
 }
 
 .btn-pro-icon {
-  font-size: 12px;
+  font-size: 14px;
 }
 
 /* Footer Pro activo */
