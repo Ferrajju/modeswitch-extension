@@ -144,8 +144,20 @@ function normalizeUrl(url) {
     const u = new URL(url);
     const host = u.hostname.replace(/^www\./, '').toLowerCase();
     const path = u.pathname.replace(/\/$/, '');
-    const search = u.search; // ✅ mantener query    
+    const search = u.search;
     return (host + path + search).toLowerCase();
+  } catch {
+    return (url || '').toLowerCase();
+  }
+}
+
+/**
+ * Extract base domain from URL (for flexible matching)
+ */
+function getDomain(url) {
+  try {
+    const u = new URL(url);
+    return u.hostname.replace(/^www\./, '').toLowerCase();
   } catch {
     return (url || '').toLowerCase();
   }
@@ -166,20 +178,42 @@ function tabsUpdate(tabId, props) {
 
 
 /**
- * Verifica si un modo está activo (tiene pestañas trackeadas abiertas)
+ * Verifica si un modo está activo (tiene pestañas abiertas que coinciden)
+ * Usa comparación por dominio para permitir navegación interna
  * @param {Object} mode - El modo a verificar
  * @returns {boolean}
  */
 function isModeActive(mode) {
   if (!mode.urls || mode.urls.length === 0) return false;
 
-  const openUrls = new Set(
-    currentTabUrls.map(normalizeUrl)
-  );
+  // Get domains of all open tabs
+  const openDomains = new Set(currentTabUrls.map(getDomain));
+  
+  // Get normalized URLs for exact matching
+  const openUrlsNormalized = new Set(currentTabUrls.map(normalizeUrl));
 
-  return mode.urls.every(url =>
-    openUrls.has(normalizeUrl(url))
-  );
+  // A mode is active if ALL its URLs have a matching open tab
+  // First try exact match, then fall back to domain match
+  return mode.urls.every(modeUrl => {
+    const normalizedModeUrl = normalizeUrl(modeUrl);
+    const modeDomain = getDomain(modeUrl);
+    
+    // Exact/prefix match first
+    if (openUrlsNormalized.has(normalizedModeUrl)) {
+      return true;
+    }
+    
+    // Check if any open URL starts with the mode URL (prefix match)
+    for (const openUrl of currentTabUrls) {
+      const normalizedOpen = normalizeUrl(openUrl);
+      if (normalizedOpen.startsWith(normalizedModeUrl) || normalizedModeUrl.startsWith(normalizedOpen)) {
+        return true;
+      }
+    }
+    
+    // Domain match as fallback (allows navigation within site)
+    return openDomains.has(modeDomain);
+  });
 }
 
 
@@ -894,7 +928,7 @@ async function handleActivatePro() {
 
 function handleBuyPro() {
   // Open Stripe checkout in new tab
-  chrome.tabs.create({ url: 'https://buy.stripe.com/8x28wQbdJfYlaKUaeogjC00' });
+  chrome.tabs.create({ url: 'https://buy.stripe.com/9B68wQchNdQdg5e2LWgjC02' });
   closeModal(elements.modalPro);
 }
 

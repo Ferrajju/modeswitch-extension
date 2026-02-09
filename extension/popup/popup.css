@@ -923,87 +923,274 @@ body {
   background: rgba(239, 68, 68, 0.1);
 }
 
-/* Pro Modal Styles */
-.pro-benefits {
-  background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(139, 92, 246, 0.05) 100%);
-  border: 1px solid rgba(139, 92, 246, 0.2);
-  border-radius: var(--radius);
-  padding: 12px 16px;
-  margin-bottom: 16px;
+/* Pro Modal Styles - Premium Design */
+.modal-pro-content {
+  max-width: 320px;
+  padding: 0;
+  overflow: hidden;
+  border-radius: 16px;
+  position: relative;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
 }
 
-.pro-benefit {
-  color: var(--text);
-  font-size: 13px;
-  margin: 6px 0;
+.btn-close-pro-x {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 10;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  border: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: center;
+  cursor: pointer;
+  color: white;
+  font-size: 18px;
+  transition: all 0.2s;
 }
 
-.pro-benefit:first-child {
-  margin-top: 0;
+.btn-close-pro-x:hover {
+  background: rgba(255, 255, 255, 0.25);
 }
 
-.pro-benefit:last-child {
-  margin-bottom: 0;
+.pro-hero {
+  background: linear-gradient(145deg, #7c3aed 0%, #5b21b6 50%, #4c1d95 100%);
+  padding: 24px 20px 20px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.pro-hero::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%);
+  animation: shimmerPro 3s ease-in-out infinite;
+}
+
+@keyframes shimmerPro {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(10%, 10%); }
+}
+
+.pro-icon-big {
+  font-size: 36px;
+  margin-bottom: 8px;
+  position: relative;
+  z-index: 1;
+}
+
+.pro-title {
+  font-size: 22px;
+  font-weight: 800;
+  color: white;
+  margin: 0 0 4px;
+  position: relative;
+  z-index: 1;
+}
+
+.pro-subtitle {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.9);
+  margin: 0;
+  position: relative;
+  z-index: 1;
+  font-weight: 500;
+}
+
+.pro-price-tag {
+  background: white;
+  margin: -14px 20px 0;
+  padding: 12px 18px;
+  border-radius: 12px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  z-index: 5;
+}
+
+.pro-price {
+  font-size: 26px;
+  font-weight: 800;
+  color: #1a1a2e;
+  letter-spacing: -0.5px;
+}
+
+.pro-price-label {
+  font-size: 10px;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+  background: #f3f4f6;
+  padding: 5px 10px;
+  border-radius: 16px;
 }
 
 .btn-buy-pro {
-  width: 100%;
-  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  display: block;
+  width: calc(100% - 40px);
+  margin: 14px 20px 12px;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
   color: white;
   border: none;
-  padding: 14px 20px;
-  border-radius: var(--radius);
+  padding: 14px 24px;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 700;
   cursor: pointer;
   transition: all 0.2s;
-  margin-bottom: 16px;
+  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-buy-pro::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  transition: left 0.5s;
+}
+
+.btn-buy-pro:hover::before {
+  left: 100%;
 }
 
 .btn-buy-pro:hover {
-  filter: brightness(1.1);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.5);
 }
 
-.btn-buy-text {
+.pro-features {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px 16px;
+  padding: 0 20px;
+  margin-bottom: 10px;
 }
 
-.btn-buy-text strong {
-  font-size: 15px;
-  font-weight: 600;
-}
-
-.btn-buy-text small {
-  font-size: 12px;
-  opacity: 0.85;
-}
-
-.pro-divider {
+.pro-feature {
+  font-size: 11px;
+  color: #6b7280;
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 12px;
-  color: var(--secondary);
-  font-size: 12px;
+  gap: 4px;
+  font-weight: 500;
 }
 
-.pro-divider::before,
-.pro-divider::after {
-  content: '';
+.pro-feature .check {
+  color: #10b981;
+  font-weight: 700;
+}
+
+.pro-secure {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 11px;
+  color: #9ca3af;
+  padding: 10px 20px;
+  margin: 0;
+  border-top: 1px solid #f3f4f6;
+}
+
+.pro-secure svg {
+  color: #10b981;
+}
+
+.pro-license-section {
+  padding: 14px 20px;
+  background: #f9fafb;
+}
+
+.pro-license-title {
+  font-size: 11px;
+  color: #6b7280;
+  margin: 0 0 10px;
+  text-align: center;
+  font-weight: 500;
+}
+
+.pro-license-form {
+  display: flex;
+  gap: 8px;
+}
+
+.license-input {
   flex: 1;
-  height: 1px;
-  background: var(--border);
+  padding: 10px 12px;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 13px;
+  background: white;
+  color: #1a1a2e;
+  text-align: center;
+  letter-spacing: 1px;
+  font-weight: 600;
+  transition: all 0.2s;
 }
 
-.pro-divider span {
+.license-input::placeholder {
+  color: #9ca3af;
+  letter-spacing: 1px;
+  font-weight: 500;
+}
+
+.license-input:focus {
+  outline: none;
+  border-color: #7c3aed;
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+}
+
+.btn-activate-license {
+  background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
   white-space: nowrap;
 }
+
+.btn-activate-license:hover {
+  filter: brightness(1.1);
+}
+
+.btn-pro-close {
+  width: 100%;
+  background: transparent;
+  border: none;
+  padding: 12px;
+  color: #9ca3af;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-pro-close:hover {
+  color: #6b7280;
+}
+
 
 /* Toast */
 .toast {

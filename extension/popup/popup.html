@@ -262,34 +262,47 @@
   <!-- Modal Pro -->
   <div id="modal-pro" class="modal hidden">
     <div class="modal-backdrop"></div>
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3>Upgrade to Pro</h3>
-        <button class="btn-close" id="btn-close-pro">&times;</button>
+    <div class="modal-content modal-pro-content">
+      <button class="btn-close btn-close-pro-x" id="btn-close-pro">&times;</button>
+      
+      <div class="pro-hero">
+        <div class="pro-icon-big">👑</div>
+        <h2 class="pro-title">Go Pro</h2>
+        <p class="pro-subtitle">Unlimited modes forever</p>
       </div>
-      <div class="modal-body">
-        <div class="pro-benefits">
-          <p class="pro-benefit">✓ Unlimited modes</p>
-          <p class="pro-benefit">✓ One-time payment</p>
-          <p class="pro-benefit">✓ Lifetime access</p>
-        </div>
-        <button id="btn-buy-pro" class="btn-buy-pro">
-          <span class="btn-buy-text">
-            <strong>Upgrade to Pro - $6.99</strong>
-            <small>One-time payment</small>
-          </span>
-        </button>
-        <div class="pro-divider">
-          <span>Already have a license?</span>
-        </div>
-        <div class="form-group">
-          <input type="text" id="license-key" placeholder="Enter your license key">
+
+      <div class="pro-price-tag">
+        <span class="pro-price">$6.99</span>
+        <span class="pro-price-label">one-time payment</span>
+      </div>
+
+      <button id="btn-buy-pro" class="btn-buy-pro">
+        Get Pro Now
+      </button>
+
+      <div class="pro-features">
+        <div class="pro-feature"><span class="check">✓</span> Unlimited tab groups</div>
+        <div class="pro-feature"><span class="check">✓</span> Lifetime access</div>
+        <div class="pro-feature"><span class="check">✓</span> No subscription</div>
+      </div>
+
+      <div class="pro-secure">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+        </svg>
+        Secure payment via Stripe
+      </div>
+
+      <div class="pro-license-section">
+        <p class="pro-license-title">Already have a license key?</p>
+        <div class="pro-license-form">
+          <input type="text" id="license-key" class="license-input" placeholder="XXXX-XXXX-XXXX">
+          <button id="btn-activate-pro" class="btn-activate-license">Activate</button>
         </div>
       </div>
-      <div class="modal-footer">
-        <button id="btn-cancel-pro" class="btn-secondary">Cancel</button>
-        <button id="btn-activate-pro" class="btn-primary">Activate</button>
-      </div>
+
+      <button id="btn-cancel-pro" class="btn-pro-close">Maybe later</button>
     </div>
   </div>
 
