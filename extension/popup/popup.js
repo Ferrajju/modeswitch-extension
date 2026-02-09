@@ -93,10 +93,11 @@ async function init() {
 
 async function loadModes() {
   currentModes = await Modes.getAll();
-  currentTabUrls = await Modes.getCurrentTabUrls();
+  await refreshCurrentTabUrls();
   activeTabsByMode = await Storage.getActiveTabs();
   renderModes();
 }
+
 
 async function loadSettings() {
   const settings = await Storage.getSettings();
@@ -126,15 +127,61 @@ async function updateLicenseUI() {
 // HELPERS
 // ============================================
 
+// --- Chrome API Promises (compatibles en todos) ---
+function tabsQuery(q) {
+  return new Promise(resolve => chrome.tabs.query(q, resolve));
+}
+function tabsCreate(c) {
+  return new Promise(resolve => chrome.tabs.create(c, resolve));
+}
+function tabsRemove(ids) {
+  return new Promise(resolve => chrome.tabs.remove(ids, () => resolve()));
+}
+
+
+function normalizeUrl(url) {
+  try {
+    const u = new URL(url);
+    const host = u.hostname.replace(/^www\./, '').toLowerCase();
+    const path = u.pathname.replace(/\/$/, '');
+    const search = u.search; // ✅ mantener query    
+    return (host + path + search).toLowerCase();
+  } catch {
+    return (url || '').toLowerCase();
+  }
+}
+
+
+async function refreshCurrentTabUrls() {
+  const tabs = await chrome.tabs.query({ windowType: 'normal' });
+  currentTabUrls = tabs
+    .map(t => t.url)
+    .filter(Boolean)
+    .filter(u => !u.startsWith('chrome://') && !u.startsWith('chrome-extension://'));
+}
+
+function tabsUpdate(tabId, props) {
+  return new Promise(resolve => chrome.tabs.update(tabId, props, resolve));
+}
+
+
 /**
  * Verifica si un modo está activo (tiene pestañas trackeadas abiertas)
  * @param {Object} mode - El modo a verificar
  * @returns {boolean}
  */
 function isModeActive(mode) {
-  const trackedTabs = activeTabsByMode[mode.id] || [];
-  return trackedTabs.length > 0;
+  if (!mode.urls || mode.urls.length === 0) return false;
+
+  const openUrls = new Set(
+    currentTabUrls.map(normalizeUrl)
+  );
+
+  return mode.urls.every(url =>
+    openUrls.has(normalizeUrl(url))
+  );
 }
+
 
 /**
  * Obtiene los modos que están activos
@@ -180,7 +227,7 @@ function renderModes() {
           }
         </div>
         <div class="dropdown">
-          <button class="btn-menu" data-action="menu" data-id="${mode.id}">⋮</button>
+          <button class="bctn-menu" data-action="menu" data-id="${mode.id}">⋮</button>
           <div class="dropdown-menu hidden" data-menu-id="${mode.id}">
             <div class="dropdown-toggle" data-action="toggle-new-window" data-id="${mode.id}">
               <span>New window</span>
@@ -324,28 +371,47 @@ function selectIcon(icon) {
 }
 
 async function handleCloseAllTabs() {
-  if (!confirm('Close all tabs and leave only one blank tab?')) {
-    return;
+  if (!confirm('¿Cerrar todas las pestañas y dejar solo una en blanco?')) return;
+
+  const activeTabs = await tabsQuery({ active: true, currentWindow: true });
+  const activeTab = activeTabs[0];
+  if (!activeTab) return;
+
+  const windowId = activeTab.windowId;
+  const tabs = await tabsQuery({ windowId });
+
+  // ✅ Crear la nueva pestaña SIN activarla (para que el popup no muera)
+  const newTab = await tabsCreate({
+    windowId,
+    url: 'chrome://newtab/',
+    active: false
+  });
+
+  const idsToClose = tabs
+    .map(t => t.id)
+    .filter(id => id && id !== newTab.id);
+
+  // (Opcional) si quieres no cerrar pestañas fijadas:
+  // const idsToClose = tabs.filter(t => t.id && !t.pinned && t.id !== newTab.id).map(t => t.id);
+
+  if (idsToClose.length) {
+    await tabsRemove(idsToClose);
+
+    if (chrome.runtime.lastError) {
+      console.warn('tabs.remove error:', chrome.runtime.lastError.message);
+      showToast('Error closing tabs', 'error');
+      return;
+    }
   }
 
-  try {
-    // Obtener todas las pestañas de la ventana actual
-    const tabs = await chrome.tabs.query({ currentWindow: true });
-    
-    // Crear una nueva pestaña en blanco
-    const newTab = await chrome.tabs.create({ url: 'chrome://newtab', active: true });
-    
-    // Cerrar todas las demás pestañas
-    const tabIdsToClose = tabs.map(tab => tab.id).filter(id => id !== newTab.id);
-    if (tabIdsToClose.length > 0) {
-      await chrome.tabs.remove(tabIdsToClose);
-    }
-    
-    showToast('Tabs closed', 'success');
-  } catch (error) {
-    showToast('Error closing tabs', 'error');
-  }
+  // ✅ Activar la pestaña nueva al final
+  await tabsUpdate(newTab.id, { active: true });
+
+  await loadModes();
+  showToast('Pestañas cerradas', 'success');
 }
+
+
 
 async function getUrlsExcludingActiveModes() {
   // Obtener todas las pestañas actuales
@@ -524,7 +590,8 @@ async function activateMode(id, forceNewWindow = false) {
     // Activar y guardar los IDs de las pestañas creadas
     const createdTabIds = await Activate.activateMode(modeToActivate, settings);
     await Storage.setActiveTabsForMode(id, createdTabIds);
-    
+    await refreshCurrentTabUrls();
+
     await loadModes(); // Recargar para actualizar el estado
     showToast('Mode activated', 'success');
   } catch (error) {
@@ -570,76 +637,101 @@ async function activateModeAlternate(id) {
 
 async function deactivateMode(id) {
   closeAllDropdowns();
-  
+
   try {
-    // Obtener las pestañas trackeadas de este modo
-    const trackedTabIds = activeTabsByMode[id] || [];
-    
-    if (trackedTabIds.length === 0) {
-      showToast('This mode has no active tabs', 'error');
+    const mode = await Modes.getById(id);
+    if (!mode) {
+      showToast('Mode not found', 'error');
       return;
     }
 
-    // Obtener todas las pestañas actuales para verificar cuáles existen
-    const allTabs = await new Promise(resolve => {
-      chrome.tabs.query({ windowType: 'normal' }, resolve);
-    });
-    
-    const existingTabIds = new Set(allTabs.map(t => t.id));
-    
-    // Filtrar solo las pestañas que aún existen
-    const tabsToClose = trackedTabIds.filter(id => existingTabIds.has(id));
-    
+    const allTabs = await tabsQuery({ windowType: 'normal' });
+
+    // 0) Construir lista de URLs protegidas (otros modos activos)
+    // Asegura que currentTabUrls está actualizado (loadModes lo hace, pero por si acaso)
+    await refreshCurrentTabUrls();
+
+    const activeModeIds = new Set(getTrulyActiveModes().map(m => m.id));
+
+    const protectedUrls = new Set();
+    for (const m of currentModes) {
+      if (m.id !== id && activeModeIds.has(m.id)) {
+        for (const u of (m.urls || [])) protectedUrls.add(normalizeUrl(u));
+      }
+    }
+
+    // 1) Intentar cerrar por tracking (tabIds)
+    let tabsToClose = (activeTabsByMode[id] || []).filter(tabId =>
+      allTabs.some(t => t.id === tabId)
+    );
+
+    // 2) Fallback: cerrar por URLs si no hay tracking
     if (tabsToClose.length === 0) {
-      // Limpiar tracking y actualizar
+      const modeUrlSet = new Set((mode.urls || []).map(normalizeUrl));
+
+      tabsToClose = allTabs
+        .filter(t => t.id && t.url)
+        .filter(t => modeUrlSet.has(normalizeUrl(t.url)))
+        .map(t => t.id);
+    }
+
+    // 2.5) Filtrar pestañas compartidas: si la URL está en otros modos activos, NO se cierra
+    const tabsToCloseFiltered = tabsToClose
+      .map(tabId => allTabs.find(t => t.id === tabId))
+      .filter(Boolean)
+      .filter(t => t.url && !protectedUrls.has(normalizeUrl(t.url)))
+      .map(t => t.id);
+
+    if (tabsToCloseFiltered.length === 0) {
+      // Nada exclusivo que cerrar
       await Storage.clearActiveTabsForMode(id);
       await loadModes();
-      showToast('Tabs were already closed', 'error');
+      showToast('No exclusive tabs to close (shared with another active mode)', 'success');
       return;
     }
 
-    // Agrupar por ventana para verificar si alguna quedará vacía
+    // 3) Evitar ventanas vacías
     const tabsByWindow = {};
     allTabs.forEach(tab => {
       if (!tabsByWindow[tab.windowId]) tabsByWindow[tab.windowId] = [];
       tabsByWindow[tab.windowId].push(tab);
     });
 
-    const tabsToCloseByWindow = {};
-    for (const tabId of tabsToClose) {
+    const toCloseByWindow = {};
+    tabsToCloseFiltered.forEach(tabId => {
       const tab = allTabs.find(t => t.id === tabId);
-      if (tab) {
-        if (!tabsToCloseByWindow[tab.windowId]) tabsToCloseByWindow[tab.windowId] = [];
-        tabsToCloseByWindow[tab.windowId].push(tab);
-      }
-    }
-
-    // Si alguna ventana quedará vacía, crear una pestaña nueva
-    for (const windowId of Object.keys(tabsToCloseByWindow)) {
-      const totalInWindow = tabsByWindow[windowId]?.length || 0;
-      const toCloseInWindow = tabsToCloseByWindow[windowId]?.length || 0;
-      
-      if (totalInWindow === toCloseInWindow) {
-        await new Promise(resolve => {
-          chrome.tabs.create({ url: 'chrome://newtab', windowId: parseInt(windowId) }, resolve);
-        });
-      }
-    }
-
-    // Cerrar las pestañas trackeadas
-    await new Promise(resolve => {
-      chrome.tabs.remove(tabsToClose, resolve);
+      if (!tab) return;
+      if (!toCloseByWindow[tab.windowId]) toCloseByWindow[tab.windowId] = [];
+      toCloseByWindow[tab.windowId].push(tab);
     });
 
-    // Limpiar el tracking de este modo
-    await Storage.clearActiveTabsForMode(id);
+    for (const windowId in toCloseByWindow) {
+      const totalInWindow = tabsByWindow[windowId]?.length || 0;
+      const closingInWindow = toCloseByWindow[windowId]?.length || 0;
 
-    showToast(`${tabsToClose.length} tab${tabsToClose.length !== 1 ? 's' : ''} closed`, 'success');
+      if (totalInWindow === closingInWindow) {
+        await tabsCreate({ windowId: Number(windowId), url: 'chrome://newtab/' });
+      }
+    }
+
+    // 4) Cerrar pestañas (solo las exclusivas)
+    await tabsRemove(tabsToCloseFiltered);
+
+    // Limpiar tracking del modo (aunque algunas tabs fueran compartidas)
+    await Storage.clearActiveTabsForMode(id);
     await loadModes();
-  } catch (error) {
-    showToast(error.message, 'error');
+
+    showToast(
+      `${tabsToCloseFiltered.length} tab${tabsToCloseFiltered.length !== 1 ? 's' : ''} closed`,
+      'success'
+    );
+
+  } catch (err) {
+    console.error(err);
+    showToast('Error closing mode', 'error');
   }
 }
+
 
 async function toggleNewWindowOption(id) {
   const mode = await Modes.getById(id);
